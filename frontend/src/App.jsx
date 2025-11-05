@@ -13,12 +13,12 @@ import Footer from './components/Footer'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
+import Topbar from './components/Topbar'
 
 const App = () => {
   return (
-    <div className='mx-4 sm:mx-[10%]'>
+   <div className="px-2 sm:px-4 md:px-6 pt-20 pb-10 w-full overflow-x-hidden">
       <ToastContainer />
-      <Navbar />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/doctors' element={<Doctors />} />
@@ -32,6 +32,8 @@ const App = () => {
         <Route path='/verify' element={<Verify />} />
       </Routes>
       <Footer />
+      <Topbar />
+         <Navbar />
     </div>
   )
 }

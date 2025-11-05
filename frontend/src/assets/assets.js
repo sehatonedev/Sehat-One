@@ -15,6 +15,8 @@ import info_icon from './info_icon.svg'
 import upload_icon from './upload_icon.png'
 import stripe_logo from './stripe_logo.png'
 import razorpay_logo from './razorpay_logo.png'
+import slider1 from './slider1.jpg'
+
 import doc1 from './doc1.png'
 import doc2 from './doc2.png'
 import doc3 from './doc3.png'
@@ -36,9 +38,24 @@ import General_physician from './General_physician.svg'
 import Gynecologist from './Gynecologist.svg'
 import Neurologist from './Neurologist.svg'
 import Pediatricians from './Pediatricians.svg'
+import hero_img from './hero_img.png'
+import bell_icon from './bell_icon.svg'
+import radiology_icon from './radiology_icon.jpg'
+import pediatrics_icon from './pediatrics_icon.jpg'
+import cardiology_icon from './cardiology_icon.jpg'
+import neurology_icon from './neurology_icon.jpg'
+import dermatology_icon from './dermatology_icon.jpg'
 
 
 export const assets = {
+    slider1,
+    dermatology_icon,
+    neurology_icon,
+    cardiology_icon,
+    pediatrics_icon,
+    radiology_icon,
+    bell_icon,
+    hero_img,
     appointment_img,
     header_img,
     group_profiles,
@@ -296,4 +313,6 @@ export const doctors = [
             line2: 'Circle, Ring Road, London'
         }
     },
+    
 ]
+
