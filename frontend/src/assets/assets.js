@@ -5,6 +5,7 @@ import profile_pic from './profile_pic.png'
 import contact_image from './contact_image.png'
 import about_image from './about_image.png'
 import logo from './logo.svg'
+import Logo1 from './Logo1.svg'
 import dropdown_icon from './dropdown_icon.svg'
 import menu_icon from './menu_icon.svg'
 import cross_icon from './cross_icon.png'
@@ -16,6 +17,10 @@ import upload_icon from './upload_icon.png'
 import stripe_logo from './stripe_logo.png'
 import razorpay_logo from './razorpay_logo.png'
 import slider1 from './slider1.jpg'
+import slider2 from './slider2.jpg'
+import slider3 from './slider3.jpg'
+import slider4 from './slider4.jpg'
+import videoconsultation from './videoconsultation.png'
 
 import doc1 from './doc1.png'
 import doc2 from './doc2.png'
@@ -49,6 +54,9 @@ import dermatology_icon from './dermatology_icon.jpg'
 
 export const assets = {
     slider1,
+    slider2,
+    slider3,
+    slider4,
     dermatology_icon,
     neurology_icon,
     cardiology_icon,
@@ -60,6 +68,7 @@ export const assets = {
     header_img,
     group_profiles,
     logo,
+    Logo1,
     chats_icon,
     verified_icon,
     info_icon,
@@ -72,7 +81,29 @@ export const assets = {
     dropdown_icon,
     upload_icon,
     stripe_logo,
-    razorpay_logo
+    razorpay_logo,
+    videoconsultation,
+    General_physician,
+    Gynecologist,
+    Gastroenterologist,
+    Dermatologist,
+    Neurologist,
+    Pediatricians,
+    doc1,
+    doc2,
+    doc3,
+    doc4,
+    doc5,
+    doc6,
+    doc7,
+    doc8,
+    doc9,
+    doc10,
+    doc11,
+    doc12,
+    doc13,
+    doc14,
+    doc15
 }
 
 export const specialityData = [

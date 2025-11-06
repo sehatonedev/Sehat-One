@@ -32,13 +32,17 @@ const displayedDoctors = viewAll
   return (
     <section className="flex flex-col gap-4 my-16 text-black md:mx-10 px-4">
       {/* --- Header --- */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-left">
-          Top Doctors
-        </h2>
+      <div className="relative mb-2">
+        <div className="text-center mb-2">
+          <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900">
+            Top Doctors
+          </h2>
+        </div>
+        
+        {/* View All Button - Positioned absolutely to the right */}
         <button
           onClick={() => setViewAll(!viewAll)}
-          className="text-blue-600 font-medium hover:underline text-xs sm:text-sm md:text-base"
+          className="absolute top-0 right-0 text-blue-600 font-medium hover:underline text-xs sm:text-sm md:text-base"
         >
           {viewAll ? "View Less" : "View All"}
         </button>
@@ -66,22 +70,22 @@ const displayedDoctors = viewAll
 
             {/* --- Doctor Info --- */}
             <div className="flex flex-col justify-center p-3 sm:p-4 w-2/3 sm:w-3/5 text-left">
-              <p className="text-sm sm:text-base md:text-lg font-semibold text-gray-800">
+              <p className="text-base sm:text-lg md:text-xl font-semibold text-gray-800">
                 {doc.name}
               </p>
-              <p className="text-xs sm:text-sm text-blue-600 font-medium">
+              <p className="text-sm sm:text-base md:text-lg text-blue-600 font-medium mt-1">
                 {doc.speciality}
               </p>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
                 {doc.hospital}
               </p>
-              <div className="mt-2 sm:mt-3">
+              <div className="mt-3 sm:mt-4">
                <button
   onClick={(e) => {
     e.stopPropagation(); 
     navigate("/login");
   }}
-  className="bg-blue-100 text-blue-700 px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm hover:bg-blue-200 transition"
+  className="bg-blue-100 text-blue-700 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base md:text-lg font-medium hover:bg-blue-200 transition"
 >
   Book Now
 </button>

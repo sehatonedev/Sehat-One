@@ -51,8 +51,8 @@ const Login = () => {
   }, [token])
 
   return (
-    <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center'>
-      <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#5E5E5E] text-sm shadow-lg'>
+    <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center pt-20 pb-10'>
+      <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#5E5E5E] text-sm shadow-lg bg-white'>
         <p className='text-2xl font-semibold'>{state === 'Sign Up' ? 'Create Account' : 'Login'}</p>
         <p>Please {state === 'Sign Up' ? 'sign up' : 'log in'} to book appointment</p>
         {state === 'Sign Up'
