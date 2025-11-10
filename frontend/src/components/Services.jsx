@@ -7,31 +7,53 @@ const Services = () => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
 
+<<<<<<< HEAD
   // --- Slider images ---
+=======
+>>>>>>> 7d9f544 (third commit)
   const sliderImages = [
     assets.slider1,
     assets.slider2,
     assets.slider3,
     assets.slider4,
+<<<<<<< HEAD
   ].filter(Boolean); // Filter out any undefined values
 
   // --- Autoplay logic ---
   useEffect(() => {
     if (sliderImages.length === 0) return;
     
+=======
+  ].filter(Boolean);
+
+  useEffect(() => {
+    if (sliderImages.length === 0) return;
+
+>>>>>>> 7d9f544 (third commit)
     const interval = setInterval(() => {
       setCurrentIndex((prev) =>
         prev === sliderImages.length - 1 ? 0 : prev + 1
       );
+<<<<<<< HEAD
     }, 3000); // 3s per slide
+=======
+    }, 3000);
+>>>>>>> 7d9f544 (third commit)
     return () => clearInterval(interval);
   }, [sliderImages.length]);
 
   return (
+<<<<<<< HEAD
     <div className="w-full flex flex-col items-center bg-gray-50 min-h-screen pt-10">
 
       {/* --- Image Slider --- */}
       <div className="relative w-full h-[320px] sm:h-[400px] md:h-[450px] overflow-hidden rounded-2xl shadow-md mb-8">
+=======
+    <div className="w-full flex flex-col items-center bg-gray-50 pt-6 sm:pt-8 md:pt-10">
+
+      {/* Slider */}
+      <div className="relative w-full h-[200px] sm:h-[320px] md:h-[450px] overflow-hidden rounded-2xl shadow-md mb-4 sm:mb-6 md:mb-8 px-4 sm:px-0">
+>>>>>>> 7d9f544 (third commit)
         {sliderImages.map((src, index) => (
           <img
             key={`slider-${index}`}
@@ -47,6 +69,7 @@ const Services = () => {
             }}
           />
         ))}
+<<<<<<< HEAD
         
         {/* --- Left Side Text Overlay (Always Visible) --- */}
         <div className="absolute left-0 top-0 bottom-0 w-full sm:w-1/2 md:w-2/5 flex items-center z-20 px-4 sm:px-6 md:px-8">
@@ -134,6 +157,85 @@ const Services = () => {
 
 </section>
 
+=======
+      </div>
+
+      {/* Heading */}
+      <div className="text-center mb-4 sm:mb-6 md:mb-8 px-4">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900">
+          Our Services
+        </h2>
+      </div>
+
+      {/* Services Grid */}
+      <section className="w-full grid grid-cols-2 grid-rows-2 gap-3 sm:gap-4 md:gap-4 px-4 sm:px-6 md:px-0">
+
+        {/* Video Consultation */}
+        <div onClick={() => navigate("/vc")}
+          className="relative flex flex-col items-center justify-center bg-[#5C4433] text-white rounded-xl overflow-hidden h-[100px] sm:h-[120px] md:h-[140px] shadow-md 
+                    transition-all duration-300 hover:shadow-lg cursor-pointer group"
+        >
+          <img
+            src={assets.videoconsultation}
+            alt="Video Consultation"
+            className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity duration-300"
+          />
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <Video className="text-orange-400 w-8 h-8 sm:w-10 sm:h-10 mb-2" />
+            <h3 className="font-semibold text-sm sm:text-base md:text-lg text-center">Video Consultation</h3>
+          </div>
+        </div>
+
+        {/* Pods */}
+        <div onClick={() => navigate("/Pods")}
+          className="relative flex flex-col items-center justify-center bg-[#5C4433] text-white rounded-xl overflow-hidden h-[100px] sm:h-[120px] md:h-[140px] shadow-md 
+                    transition-all duration-300 hover:shadow-lg cursor-pointer group"
+        >
+          <img
+            src={assets.hero_img}
+            alt="Pods"
+            className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity duration-300"
+          />
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <Hospital className="text-teal-300 w-8 h-8 sm:w-10 sm:h-10 mb-2" />
+            <h3 className="font-semibold text-sm sm:text-base md:text-lg text-center">Pods</h3>
+          </div>
+        </div>
+
+        {/* Medicine */}
+        <div onClick={() => navigate("/Medicine")}
+          className="relative flex flex-col items-center justify-center bg-[#5C4433] text-white rounded-xl overflow-hidden h-[100px] sm:h-[120px] md:h-[140px] shadow-md 
+                    transition-all duration-300 hover:shadow-lg cursor-pointer group"
+        >
+          <img
+            src={assets.contact_image}
+            alt="Medicine"
+            className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity duration-300"
+          />
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <Pill className="text-green-400 w-8 h-8 sm:w-10 sm:h-10 mb-2" />
+            <h3 className="font-semibold text-sm sm:text-base md:text-lg text-center">Medicine</h3>
+          </div>
+        </div>
+
+        {/* Lab Tests */}
+        <div onClick={() => navigate("/LabTests")}
+          className="relative flex flex-col items-center justify-center bg-[#5C4433] text-white rounded-xl overflow-hidden h-[100px] sm:h-[120px] md:h-[140px] shadow-md 
+                    transition-all duration-300 hover:shadow-lg cursor-pointer group"
+        >
+          <img
+            src={assets.group_profiles}
+            alt="Lab Tests"
+            className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity duration-300"
+          />
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <FlaskConical className="text-red-400 w-8 h-8 sm:w-10 sm:h-10 mb-2" />
+            <h3 className="font-semibold text-sm sm:text-base md:text-lg text-center">Lab Tests</h3>
+          </div>
+        </div>
+
+      </section>
+>>>>>>> 7d9f544 (third commit)
     </div>
   );
 };
