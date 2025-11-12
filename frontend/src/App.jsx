@@ -13,6 +13,8 @@ import Footer from './components/Footer'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
+<<<<<<< HEAD
+=======
 import Vc from './pages/Vc'
 import Pods from './pages/Pods'
 import Medicine from './pages/Medicine'
@@ -21,30 +23,37 @@ import UpcomingAppointmentDetails from "./pages/UpcomingAppointmentDetails";
 import Bookings from './pages/Bookings'
 import Records from './pages/Records'
 
+>>>>>>> 7d9f544 (third commit)
 // Commented out for future use in responsiveness
 // import Topbar from './components/Topbar'
 
 const App = () => {
   return (
+<<<<<<< HEAD
+   <div className="px-2 sm:px-4 md:px-6 pt-28 pb-10 w-full overflow-x-hidden">
+=======
    <div className="px-2 sm:px-4 md:px-6 pt-20 pb-10 w-full overflow-x-hidden">
+>>>>>>> 7d9f544 (third commit)
       <ToastContainer />
       <Navbar />
       {/* Commented out for future use in responsiveness */}
       {/* <Topbar /> */}
       <Routes>
         <Route path='/' element={<Home />} />
+<<<<<<< HEAD
+        <Route path='/doctors' element={<Doctors />} />
+        <Route path='/doctors/:speciality' element={<Doctors />} />
+=======
         <Route path='/vc' element={<Vc />} />
-        <Route path='/pods' element={<Pods />} />
         <Route path='/Pods' element={<Pods />} />
-        <Route path='/medicine' element={<Medicine />} />
         <Route path='/Medicine' element={<Medicine />} />
-        <Route path='/lab-tests' element={<LabTests />} />
         <Route path='/LabTests' element={<LabTests />} />
         <Route path='/doctors' element={<Doctors />} />
         <Route path='/doctors/:speciality' element={<Doctors />} />
         <Route path="/appointment-details" element={<UpcomingAppointmentDetails />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/records" element={<Records />} />
+>>>>>>> 7d9f544 (third commit)
         <Route path='/login' element={<Login />} />
         <Route path='/about' element={<About />} />
         <Route path='/contact' element={<Contact />} />
@@ -58,4 +67,8 @@ const App = () => {
   )
 }
 
+<<<<<<< HEAD
+export default App
+=======
 export default App;
+>>>>>>> 7d9f544 (third commit)

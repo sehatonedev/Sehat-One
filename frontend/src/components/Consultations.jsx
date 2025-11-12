@@ -1,58 +1,33 @@
-import React, { useState, useEffect, useContext } from "react";
-import { AppContext } from "../context/AppContext";
-import axios from "axios";
-import { toast } from "react-toastify";
+import React, { useState, useEffect } from "react";
 
 const Consultations = () => {
-  const { backendUrl, token } = useContext(AppContext);
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  // Function to format the date eg. ( 20_01_2000 => 20 Jan 2000 )
-  const slotDateFormat = (slotDate) => {
-    const dateArray = slotDate.split('_');
-    return dateArray[0] + " " + months[Number(dateArray[1]) - 1] + " " + dateArray[2];
-  };
-
-  // Fetch consultations from backend
+  // Simulated fetch (replace later with API call)
   useEffect(() => {
-    const fetchConsultations = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } });
-        if (data.success) {
-          // Filter completed appointments
-          const completed = data.appointments
-            .filter(apt => apt.isCompleted || apt.payment)
-            .map(apt => ({
-              id: apt._id,
-              doctor: apt.docData?.name || "Doctor",
-              date: apt.slotDate,
-              mode: "In-clinic", // Can be enhanced to support video consultation
-              status: apt.isCompleted ? "Completed" : "Paid",
-              prescriptionUrl: apt.prescriptionUrl || null,
-              appointmentId: apt._id
-            }));
-          setConsultations(completed);
-        } else {
-          toast.error(data.message);
+    setTimeout(() => {
+      setConsultations([
+        {
+          id: 1,
+          doctor: "Dr. Aarav Sharma",
+          date: "2025-02-11",
+          mode: "Video Consultation",
+          status: "Completed",
+          prescriptionUrl: "/sample-prescription.pdf"
+        },
+        {
+          id: 2,
+          doctor: "Dr. Meera Raj",
+          date: "2025-01-29",
+          mode: "In-clinic",
+          status: "Completed",
+          prescriptionUrl: "/sample-prescription.pdf"
         }
-      } catch (error) {
-        console.log(error);
-        toast.error(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConsultations();
-  }, [token, backendUrl]);
+      ]);
+      setLoading(false);
+    }, 500);
+  }, []);
 
   if (loading) {
     return (
@@ -85,25 +60,21 @@ const Consultations = () => {
               >
                 <td className="py-3 px-4">{item.doctor}</td>
                 <td className="py-3 px-4">
-                  {slotDateFormat(item.date)}
+                  {new Date(item.date).toLocaleDateString()}
                 </td>
                 <td className="py-3 px-4">{item.mode}</td>
                 <td className="py-3 px-4 text-green-600">{item.status}</td>
 
                 {/* View Prescription Button */}
                 <td className="py-3 px-4">
-                  {item.prescriptionUrl ? (
-                    <a
-                      href={item.prescriptionUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition"
-                    >
-                      View Rx
-                    </a>
-                  ) : (
-                    <span className="text-sm text-gray-400 px-3 py-1">No Rx</span>
-                  )}
+                  <a
+                    href={item.prescriptionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition"
+                  >
+                    View Rx
+                  </a>
                 </td>
               </tr>
             ))}
