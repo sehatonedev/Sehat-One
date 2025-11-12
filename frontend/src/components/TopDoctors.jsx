@@ -8,7 +8,10 @@ const TopDoctors = () => {
   const { doctors } = useContext(AppContext);
   const [viewAll, setViewAll] = useState(false);
 
+<<<<<<< HEAD
   // --- Fallback doctor data (in case context is empty) ---
+=======
+>>>>>>> 7d9f544 (third commit)
   const fallbackDoctors = [
     { name: "Dr. Olivia Smith", speciality: "Cardiology", hospital: "Apollo Hospital", image:assets.doc1 },
     { name: "Dr. Ethan Brown", speciality: "Dermatology", hospital: "Fortis Health", image: assets.doc2 },
@@ -23,15 +26,21 @@ const TopDoctors = () => {
   ];
 
   const doctorsList = doctors?.length ? doctors : fallbackDoctors;
+<<<<<<< HEAD
 const isSmallScreen = window.innerWidth < 640;
 const displayedDoctors = viewAll
   ? doctorsList
   : doctorsList.slice(0, isSmallScreen ? 2 : 4);
 
+=======
+
+  const displayedDoctors = viewAll ? doctorsList : doctorsList.slice(0, 4);
+>>>>>>> 7d9f544 (third commit)
 
   return (
     <section className="flex flex-col gap-4 my-16 text-black md:mx-10 px-4">
       {/* --- Header --- */}
+<<<<<<< HEAD
       <div className="relative mb-2">
         <div className="text-center mb-2">
           <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900">
@@ -43,13 +52,26 @@ const displayedDoctors = viewAll
         <button
           onClick={() => setViewAll(!viewAll)}
           className="absolute top-0 right-0 text-blue-600 font-medium hover:underline text-xs sm:text-sm md:text-base"
+=======
+      <div className="text-center mb-4">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900">
+          Top Doctors
+        </h2>
+        <button
+          onClick={() => setViewAll(!viewAll)}
+          className="mt-2 text-blue-600 font-medium hover:underline text-sm sm:text-base md:text-lg"
+>>>>>>> 7d9f544 (third commit)
         >
           {viewAll ? "View Less" : "View All"}
         </button>
       </div>
 
       {/* --- Doctor Cards --- */}
+<<<<<<< HEAD
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-5 sm:gap-6 pt-5">
+=======
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-6 overflow-x-auto no-scrollbar pt-2">
+>>>>>>> 7d9f544 (third commit)
         {displayedDoctors.map((doc, index) => (
           <div
             key={index}
@@ -57,10 +79,17 @@ const displayedDoctors = viewAll
               navigate(`/appointment/${doc._id || index}`);
               scrollTo(0, 0);
             }}
+<<<<<<< HEAD
             className="flex flex-row bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden hover:-translate-y-1"
           >
             {/* --- Doctor Image --- */}
             <div className="w-1/3 sm:w-2/5">
+=======
+            className="flex flex-row sm:flex-col min-w-[250px] sm:min-w-[220px] md:min-w-[250px] bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden hover:-translate-y-1"
+          >
+            {/* --- Doctor Image --- */}
+            <div className="w-1/3 sm:w-full h-32 sm:h-44">
+>>>>>>> 7d9f544 (third commit)
               <img
                 src={doc.image}
                 alt={doc.name}
@@ -69,13 +98,18 @@ const displayedDoctors = viewAll
             </div>
 
             {/* --- Doctor Info --- */}
+<<<<<<< HEAD
             <div className="flex flex-col justify-center p-3 sm:p-4 w-2/3 sm:w-3/5 text-left">
+=======
+            <div className="flex flex-col justify-center p-3 sm:p-4 w-2/3 sm:w-full text-left sm:text-center">
+>>>>>>> 7d9f544 (third commit)
               <p className="text-base sm:text-lg md:text-xl font-semibold text-gray-800">
                 {doc.name}
               </p>
               <p className="text-sm sm:text-base md:text-lg text-blue-600 font-medium mt-1">
                 {doc.speciality}
               </p>
+<<<<<<< HEAD
               <p className="text-sm sm:text-base text-gray-600 mt-1">
                 {doc.hospital}
               </p>
@@ -90,6 +124,19 @@ const displayedDoctors = viewAll
   Book Now
 </button>
 
+=======
+              <p className="text-sm sm:text-base text-gray-600 mt-1">{doc.hospital}</p>
+              <div className="mt-2 sm:mt-4 flex justify-center">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/doctors");
+                  }}
+                  className="bg-blue-100 text-blue-700 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base md:text-lg font-medium hover:bg-blue-200 transition"
+                >
+                  Book Now
+                </button>
+>>>>>>> 7d9f544 (third commit)
               </div>
             </div>
           </div>
