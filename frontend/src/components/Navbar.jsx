@@ -7,13 +7,16 @@ import { assets } from "../assets/assets";
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fakeLoggedIn } = useContext(AppContext);
+  const { isLoggedIn, logout } = useContext(AppContext);
   const [activePath, setActivePath] = useState("/");
   const [selectedLocation, setSelectedLocation] = useState("New Delhi");
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const notificationRef = useRef(null);
+  const profileRef = useRef(null);
 
   useEffect(() => setActivePath(location.pathname), [location.pathname]);
 
@@ -21,6 +24,9 @@ const Navbar = () => {
     const handleClickOutside = (e) => {
       if (notificationRef.current && !notificationRef.current.contains(e.target)) {
         setShowNotifications(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -33,20 +39,34 @@ const Navbar = () => {
     { id: 3, message: "Reminder: Follow-up visit tomorrow at 4 PM." }
   ];
 
-  const navItems = fakeLoggedIn
+  const navItems = isLoggedIn
     ? [
         { label: "Home", path: "/", icon: <Home size={20} /> },
         { label: "Doctors", path: "/doctors", icon: <Compass size={20} /> },
         { label: "Bookings", path: "/bookings", icon: <CalendarDays size={20} /> },
         { label: "Records", path: "/records", icon: <CalendarDays size={20} /> },
-        { label: "Profile", path: "/my-profile", icon: <User size={20} /> },
       ]
     : [
         { label: "Home", path: "/", icon: <Home size={20} /> },
         { label: "Doctors", path: "/doctors", icon: <Compass size={20} /> },
         { label: "Appointment", path: "/my-appointments", icon: <CalendarDays size={20} /> },
-        { label: "Profile", path: "/my-profile", icon: <User size={20} /> },
       ];
+
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+    setShowProfileMenu(false);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutConfirm(false);
+    navigate("/");
+    window.location.reload();
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-[#0077B6] px-4 py-3 flex items-center justify-between text-white z-50 h-16">
@@ -115,7 +135,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {!fakeLoggedIn ? (
+        {!isLoggedIn ? (
           <button
             onClick={() => navigate("/login")}
             className="hidden md:block bg-white text-[#0077B6] px-4 py-2 rounded-full shadow text-sm"
@@ -123,15 +143,49 @@ const Navbar = () => {
             Login / Signup
           </button>
         ) : (
-          <button
-            onClick={() => {
-              localStorage.removeItem("fakeLoggedIn");
-              window.location.reload();
-            }}
-            className="hidden md:block bg-white text-[#0077B6] px-4 py-2 rounded-full shadow text-sm"
-          >
-            Logout
-          </button>
+          <>
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="hidden md:flex items-center gap-2 bg-white text-[#0077B6] px-4 py-2 rounded-full shadow text-sm hover:bg-gray-50 transition-colors"
+              >
+                <User size={20} />
+                <span>Profile</span>
+              </button>
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded-lg w-48 overflow-hidden z-50">
+                  <button
+                    onClick={() => {
+                      navigate("/my-profile");
+                      setShowProfileMenu(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors ${
+                      activePath === "/my-profile" ? "bg-blue-50 text-[#0077B6] font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    My Profile
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/my-appointments");
+                      setShowProfileMenu(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-t ${
+                      activePath === "/my-appointments" ? "bg-blue-50 text-[#0077B6] font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    My Appointments
+                  </button>
+                  <button
+                    onClick={handleLogoutClick}
+                    className="w-full text-left px-4 py-3 hover:bg-red-50 transition-colors border-t text-red-600"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         <div className="md:hidden flex items-center">
@@ -173,7 +227,7 @@ const Navbar = () => {
             <option className="bg-[#0077B6]">Chennai</option>
           </select>
 
-          {!fakeLoggedIn ? (
+          {!isLoggedIn ? (
             <button
               onClick={() => navigate("/login")}
               className="bg-white text-[#0077B6] px-4 py-2 rounded-full shadow mt-2"
@@ -181,16 +235,69 @@ const Navbar = () => {
               Login / Signup
             </button>
           ) : (
-            <button
-              onClick={() => {
-                localStorage.removeItem("fakeLoggedIn");
-                window.location.reload();
-              }}
-              className="bg-white text-[#0077B6] px-4 py-2 rounded-full shadow mt-2"
-            >
-              Logout
-            </button>
+            <>
+              <div className="mt-2 border-t border-white/20 pt-2">
+                <p className="text-white/80 text-sm font-semibold mb-2 px-3">Profile</p>
+                <button
+                  onClick={() => {
+                    navigate("/my-profile");
+                    setMobileMenu(false);
+                  }}
+                  className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-full transition ${
+                    activePath === "/my-profile" ? "bg-white text-[#0077B6]" : "hover:bg-white/20 text-white"
+                  }`}
+                >
+                  <User size={18} />
+                  <span>My Profile</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/my-appointments");
+                    setMobileMenu(false);
+                  }}
+                  className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-full transition ${
+                    activePath === "/my-appointments" ? "bg-white text-[#0077B6]" : "hover:bg-white/20 text-white"
+                  }`}
+                >
+                  <CalendarDays size={18} />
+                  <span>My Appointments</span>
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(true);
+                  setMobileMenu(false);
+                }}
+                className="bg-white text-[#0077B6] px-4 py-2 rounded-full shadow mt-2"
+              >
+                Logout
+              </button>
+            </>
           )}
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Are you sure?</h3>
+            <p className="text-gray-600 mb-6">Do you want to logout from your account?</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelLogout}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </nav>

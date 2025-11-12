@@ -7,16 +7,12 @@ export const AppContext = createContext();
 const AppContextProvider = (props) => {
 
     const currencySymbol = '₹';
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
     const [doctors, setDoctors] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token') || '');
     const [userData, setUserData] = useState(false);
-
-    //  Fake login (UI only)
-    const [fakeLoggedIn, setFakeLoggedIn] = useState(
-        localStorage.getItem("fakeLoggedIn") === "true"
-    );
+    const [loading, setLoading] = useState(true);
 
     // --- Doctors API ---
     const getDoctosData = async () => {
@@ -24,15 +20,23 @@ const AppContextProvider = (props) => {
             const { data } = await axios.get(backendUrl + '/api/doctor/list');
             if (data.success) {
                 setDoctors(data.doctors);
-            } else toast.error(data.message);
+            } else {
+                console.error(data.message);
+            }
         } catch (error) {
             console.log(error);
-            toast.error(error.message);
+            // Don't show error toast for doctor list as it's not critical
         }
     };
 
     // --- User Profile API ---
     const loadUserProfileData = async () => {
+        if (!token) {
+            setUserData(false);
+            setLoading(false);
+            return;
+        }
+
         try {
             const { data } = await axios.get(
                 backendUrl + '/api/user/get-profile',
@@ -41,11 +45,32 @@ const AppContextProvider = (props) => {
 
             if (data.success) {
                 setUserData(data.userData);
-            } else toast.error(data.message);
+            } else {
+                // Token might be invalid, clear it
+                if (data.message.includes('Not Authorized') || data.message.includes('Invalid')) {
+                    localStorage.removeItem('token');
+                    setToken('');
+                    setUserData(false);
+                }
+            }
         } catch (error) {
             console.log(error);
-            toast.error(error.message);
+            // If unauthorized, clear token
+            if (error.response?.status === 401 || error.response?.data?.message?.includes('Not Authorized')) {
+                localStorage.removeItem('token');
+                setToken('');
+                setUserData(false);
+            }
+        } finally {
+            setLoading(false);
         }
+    };
+
+    // Logout function
+    const logout = () => {
+        localStorage.removeItem('token');
+        setToken('');
+        setUserData(false);
     };
 
     useEffect(() => {
@@ -53,7 +78,7 @@ const AppContextProvider = (props) => {
     }, []);
 
     useEffect(() => {
-        if (token) loadUserProfileData();
+        loadUserProfileData();
     }, [token]);
 
     // Provide everything needed
@@ -67,8 +92,9 @@ const AppContextProvider = (props) => {
         userData,
         setUserData,
         loadUserProfileData,
-        fakeLoggedIn,
-        setFakeLoggedIn
+        logout,
+        loading,
+        isLoggedIn: !!token && !!userData
     };
 
     return (

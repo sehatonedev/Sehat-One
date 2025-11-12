@@ -5,9 +5,10 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const Profile = () => {
-  const { userData, token, setToken, backendUrl, loadUserProfileData } = useContext(AppContext);
+  const { userData, token, backendUrl, loadUserProfileData, logout } = useContext(AppContext);
   const navigate = useNavigate();
   const [isEdit, setIsEdit] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -85,10 +86,18 @@ const Profile = () => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken("");
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutConfirm(false);
     navigate("/login");
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   if (!token) {
@@ -249,7 +258,7 @@ const Profile = () => {
                   Edit Profile
                 </button>
                 <button
-                  onClick={logout}
+                  onClick={handleLogoutClick}
                   className="w-full border border-red-300 text-red-600 font-semibold py-2 rounded-xl hover:bg-red-50 transition-all"
                 >
                   Logout
@@ -261,6 +270,30 @@ const Profile = () => {
       ) : (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="w-20 h-20 border-4 border-gray-300 border-t-4 border-t-blue-500 rounded-full animate-spin"></div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Are you sure?</h3>
+            <p className="text-gray-600 mb-6">Do you want to logout from your account?</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelLogout}
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

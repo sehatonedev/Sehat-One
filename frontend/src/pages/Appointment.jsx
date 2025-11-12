@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 import RelatedDoctors from '../components/RelatedDoctors'
@@ -9,6 +9,10 @@ import { toast } from 'react-toastify'
 const Appointment = () => {
 
     const { docId } = useParams()
+    const [searchParams] = useSearchParams()
+    const appointmentId = searchParams.get('reschedule')
+    const isReschedule = !!appointmentId
+
     const { doctors, currencySymbol, backendUrl, token, getDoctosData } = useContext(AppContext)
     const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -92,6 +96,16 @@ const Appointment = () => {
             return navigate('/login')
         }
 
+        if (!slotTime) {
+            toast.warning('Please select a time slot')
+            return
+        }
+
+        if (!docSlots[slotIndex] || !docSlots[slotIndex][0]) {
+            toast.error('Invalid slot selection')
+            return
+        }
+
         const date = docSlots[slotIndex][0].datetime
 
         let day = date.getDate()
@@ -101,8 +115,26 @@ const Appointment = () => {
         const slotDate = day + "_" + month + "_" + year
 
         try {
+            let data
 
-            const { data } = await axios.post(backendUrl + '/api/user/book-appointment', { docId, slotDate, slotTime }, { headers: { token } })
+            // If rescheduling, call reschedule endpoint
+            if (isReschedule && appointmentId) {
+                const response = await axios.post(
+                    backendUrl + '/api/user/reschedule-appointment',
+                    { appointmentId, newSlotDate: slotDate, newSlotTime: slotTime },
+                    { headers: { token } }
+                )
+                data = response.data
+            } else {
+                // Otherwise, book new appointment
+                const response = await axios.post(
+                    backendUrl + '/api/user/book-appointment',
+                    { docId, slotDate, slotTime },
+                    { headers: { token } }
+                )
+                data = response.data
+            }
+
             if (data.success) {
                 toast.success(data.message)
                 getDoctosData()
@@ -113,7 +145,7 @@ const Appointment = () => {
 
         } catch (error) {
             console.log(error)
-            toast.error(error.message)
+            toast.error(error.response?.data?.message || error.message || 'Failed to process appointment')
         }
 
     }
@@ -177,7 +209,9 @@ const Appointment = () => {
                     ))}
                 </div>
 
-                <button onClick={bookAppointment} className='bg-primary text-white text-sm font-light px-20 py-3 rounded-full my-6'>Book an appointment</button>
+                <button onClick={bookAppointment} className='bg-primary text-white text-sm font-light px-20 py-3 rounded-full my-6'>
+                    {isReschedule ? 'Reschedule Appointment' : 'Book an appointment'}
+                </button>
             </div>
 
             {/* Listing Releated Doctors */}

@@ -5,7 +5,7 @@ import { AppContext } from "../context/AppContext";
 
 const HowItWorks = () => {
   const navigate = useNavigate();
-  const { fakeLoggedIn } = useContext(AppContext);
+  const { isLoggedIn } = useContext(AppContext);
 
   const steps = [
     {
@@ -78,7 +78,7 @@ const HowItWorks = () => {
         })}
       </div>
 
-      {!fakeLoggedIn && (
+      {!isLoggedIn && (
         <button
           onClick={() => navigate("/login")}
           className="mt-16 bg-blue-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold 

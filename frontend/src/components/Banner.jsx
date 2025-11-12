@@ -6,7 +6,7 @@ import { ShieldCheck, Clock, CreditCard, RefreshCw, Video, Star } from 'lucide-r
 
 const Banner = () => {
   const navigate = useNavigate();
-  const { fakeLoggedIn } = useContext(AppContext);
+  const { isLoggedIn } = useContext(AppContext);
 
   const features = [
     { icon: <RefreshCw className="text-blue-600 w-5 h-5 sm:w-6 sm:h-6" />, title: "One Free Reschedule" },
@@ -58,7 +58,7 @@ const Banner = () => {
             ))}
           </div>
 
-          {!fakeLoggedIn && (
+          {!isLoggedIn && (
             <button
               onClick={() => navigate("/login")}
               className="bg-white text-blue-700 text-xs sm:text-sm font-semibold px-6 sm:px-8 py-2 sm:py-3 

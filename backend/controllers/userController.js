@@ -220,6 +220,72 @@ const cancelAppointment = async (req, res) => {
     }
 }
 
+// API to reschedule appointment
+const rescheduleAppointment = async (req, res) => {
+    try {
+        const { userId, appointmentId, newSlotDate, newSlotTime } = req.body
+
+        // Get the existing appointment
+        const appointmentData = await appointmentModel.findById(appointmentId)
+
+        // Verify appointment belongs to user
+        if (appointmentData.userId !== userId) {
+            return res.json({ success: false, message: 'Unauthorized action' })
+        }
+
+        // Check if appointment is cancelled or completed
+        if (appointmentData.cancelled) {
+            return res.json({ success: false, message: 'Cannot reschedule cancelled appointment' })
+        }
+
+        if (appointmentData.isCompleted) {
+            return res.json({ success: false, message: 'Cannot reschedule completed appointment' })
+        }
+
+        const { docId, slotDate, slotTime } = appointmentData
+
+        // Get doctor data
+        const doctorData = await doctorModel.findById(docId)
+
+        if (!doctorData.available) {
+            return res.json({ success: false, message: 'Doctor Not Available' })
+        }
+
+        let slots_booked = doctorData.slots_booked
+
+        // Release old slot
+        if (slots_booked[slotDate] && slots_booked[slotDate].includes(slotTime)) {
+            slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
+        }
+
+        // Check if new slot is available
+        if (slots_booked[newSlotDate]) {
+            if (slots_booked[newSlotDate].includes(newSlotTime)) {
+                return res.json({ success: false, message: 'New slot is not available' })
+            }
+            slots_booked[newSlotDate].push(newSlotTime)
+        } else {
+            slots_booked[newSlotDate] = [newSlotTime]
+        }
+
+        // Update appointment with new date and time
+        await appointmentModel.findByIdAndUpdate(appointmentId, {
+            slotDate: newSlotDate,
+            slotTime: newSlotTime,
+            rescheduled: true
+        })
+
+        // Update doctor's slots
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+
+        res.json({ success: true, message: 'Appointment Rescheduled Successfully' })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
 // API to get user appointments for frontend my-appointments page
 const listAppointment = async (req, res) => {
     try {
@@ -351,6 +417,7 @@ export {
     bookAppointment,
     listAppointment,
     cancelAppointment,
+    rescheduleAppointment,
     paymentRazorpay,
     verifyRazorpay,
     paymentStripe,

@@ -34,25 +34,9 @@ const MyAppointments = () => {
         }
     }
 
-    // Function to cancel appointment Using API
-    const cancelAppointment = async (appointmentId) => {
-
-        try {
-
-            const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { token } })
-
-            if (data.success) {
-                toast.success(data.message)
-                getUserAppointments()
-            } else {
-                toast.error(data.message)
-            }
-
-        } catch (error) {
-            console.log(error)
-            toast.error(error.message)
-        }
-
+    // Function to reschedule appointment - redirects to appointment page with appointment ID
+    const rescheduleAppointment = (docId, appointmentId) => {
+        navigate(`/appointment/${docId}?reschedule=${appointmentId}`)
     }
 
     const initPay = (order) => {
@@ -130,7 +114,6 @@ const MyAppointments = () => {
                 {appointments.map((item, index) => (
                     <div key={index} className='grid grid-cols-[1fr_2fr] gap-4 sm:flex sm:gap-6 py-4 border-b'>
                         <div>
-                            <p>Myappointments page</p>
                             <img className='w-36 bg-[#EAEFFF]' src={item.docData.image} alt="" />
                         </div>
                         <div className='flex-1 text-sm text-[#5E5E5E]'>
@@ -150,8 +133,7 @@ const MyAppointments = () => {
 
                             {item.isCompleted && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Completed</button>}
 
-                            {!item.cancelled && !item.isCompleted && <button onClick={() => cancelAppointment(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-red-600 hover:text-white transition-all duration-300'>Cancel appointment</button>}
-                            {item.cancelled && !item.isCompleted && <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>Appointment cancelled</button>}
+                            {!item.cancelled && !item.isCompleted && <button onClick={() => rescheduleAppointment(item.docId, item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-blue-600 hover:text-white transition-all duration-300'>Reschedule appointment</button>}
                         </div>
                     </div>
                 ))}

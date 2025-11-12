@@ -1,14 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
+import axios from "axios";
+import { toast } from "react-toastify";
 import UpcomingAppointmentDetails from "./UpcomingAppointmentDetails";
 
 const Bookings = () => {
   const [tab, setTab] = useState("upcoming");
+  const { token, backendUrl, isLoggedIn } = useContext(AppContext);
+  const navigate = useNavigate();
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const tabs = [
     { id: "active", label: "Active" },
     { id: "upcoming", label: "Upcoming" },
     { id: "past", label: "Past Bookings" },
   ];
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+
+    const fetchAppointments = async () => {
+      try {
+        const { data } = await axios.get(backendUrl + '/api/user/appointments', {
+          headers: { token }
+        });
+
+        if (data.success) {
+          setAppointments(data.appointments || []);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("Failed to load appointments");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchAppointments();
+    }
+  }, [token, backendUrl, isLoggedIn, navigate]);
+
+  // Filter appointments based on tab
+  const getFilteredAppointments = () => {
+    const now = new Date();
+    
+    return appointments.filter(apt => {
+      if (apt.cancelled) return false;
+      
+      const [day, month, year] = apt.slotDate.split('_').map(Number);
+      const appointmentDate = new Date(year, month - 1, day);
+      
+      if (tab === "active") {
+        // Active: not cancelled, not completed, payment done, date is today or future
+        return !apt.isCompleted && apt.payment && appointmentDate >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (tab === "upcoming") {
+        // Upcoming: not cancelled, not completed, date is future
+        return !apt.isCompleted && appointmentDate >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (tab === "past") {
+        // Past: completed or date is past
+        return apt.isCompleted || appointmentDate < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      }
+      return false;
+    });
+  };
+
+  const filteredAppointments = getFilteredAppointments();
+
+  if (!isLoggedIn) return null;
 
   return (
     <div className="w-full min-h-screen bg-white p-0">
@@ -43,25 +107,72 @@ const Bookings = () => {
       {/* TAB CONTENT SECTIONS */}
       <div className="w-full flex flex-col items-center">
 
-        {/* ACTIVE BOOKINGS */}
-        {tab === "active" && (
+        {loading ? (
           <div className="w-full max-w-4xl text-center text-gray-700 text-base sm:text-lg py-8">
-            <p>No active bookings right now.</p>
+            <div className="w-20 h-20 border-4 border-gray-300 border-t-4 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* ACTIVE BOOKINGS */}
+            {tab === "active" && (
+              <div className="w-full max-w-4xl px-4">
+                {filteredAppointments.length > 0 ? (
+                  <>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
+                      Appointment Details
+                    </h1>
+                    {filteredAppointments.map((apt, index) => (
+                      <UpcomingAppointmentDetails key={apt._id || index} appointment={apt} />
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center text-gray-700 text-base sm:text-lg py-8">
+                    <p>No active bookings right now.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-        {/* UPCOMING BOOKINGS */}
-        {tab === "upcoming" && (
-          <div className="w-full">
-            <UpcomingAppointmentDetails />
-          </div>
-        )}
+            {/* UPCOMING BOOKINGS */}
+            {tab === "upcoming" && (
+              <div className="w-full px-4">
+                {filteredAppointments.length > 0 ? (
+                  <>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
+                      Appointment Details
+                    </h1>
+                    {filteredAppointments.map((apt, index) => (
+                      <UpcomingAppointmentDetails key={apt._id || index} appointment={apt} />
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center text-gray-700 text-base sm:text-lg py-8">
+                    <p>No upcoming bookings.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-        {/* PAST BOOKINGS */}
-        {tab === "past" && (
-          <div className="w-full max-w-4xl text-center text-gray-700 text-base sm:text-lg py-8">
-            <p>Your past bookings will appear here.</p>
-          </div>
+            {/* PAST BOOKINGS */}
+            {tab === "past" && (
+              <div className="w-full max-w-4xl px-4">
+                {filteredAppointments.length > 0 ? (
+                  <>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
+                      Appointment Details
+                    </h1>
+                    {filteredAppointments.map((apt, index) => (
+                      <UpcomingAppointmentDetails key={apt._id || index} appointment={apt} />
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center text-gray-700 text-base sm:text-lg py-8">
+                    <p>Your past bookings will appear here.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
       </div>
