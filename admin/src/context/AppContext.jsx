@@ -5,8 +5,8 @@ export const AppContext = createContext()
 
 const AppContextProvider = (props) => {
 
-    const currency = import.meta.env.VITE_CURRENCY
-    const backendUrl = import.meta.env.VITE_BACKEND_URL
+    const currency = import.meta.env.VITE_CURRENCY || '₹'
+    const backendUrl = (import.meta.env.VITE_BACKEND_URL || (import.meta.env.DEV ? 'http://localhost:4000' : '')).replace(/\/$/, '')
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
