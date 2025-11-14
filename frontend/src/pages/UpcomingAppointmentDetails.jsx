@@ -1,13 +1,13 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Video, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
-import axios from "axios";
-import { toast } from "react-toastify";
+import VideoCall from "../components/VideoCall";
 
 const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
   const { token, backendUrl, currencySymbol } = useContext(AppContext);
   const navigate = useNavigate();
+  const [showVideoCall, setShowVideoCall] = useState(false);
 
   // Use prop if provided, otherwise show placeholder
   const appointment = appointmentProp || {
@@ -35,20 +35,30 @@ const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
     return `${day} ${months[month - 1]} ${year}`;
   };
 
-  const handlePayment = () => {
-    if (appointmentProp && appointmentProp._id) {
-      navigate(`/my-appointments`);
-    }
-  };
-
   const handleReschedule = () => {
     if (appointmentProp && appointmentProp.docData && appointmentProp._id) {
       navigate(`/appointment/${appointmentProp.docId}?reschedule=${appointmentProp._id}`);
     }
   };
 
+  const handleStartVideoCall = () => {
+    // Only allow video call if payment is done
+    if (!appointmentProp?.payment) {
+      alert('Please complete payment first to start video call');
+      return;
+    }
+    setShowVideoCall(true);
+  };
+
   return (
-    <div className="w-full bg-white flex flex-col mb-6">
+    <>
+      {showVideoCall && appointmentProp && (
+        <VideoCall 
+          appointment={appointmentProp} 
+          onClose={() => setShowVideoCall(false)} 
+        />
+      )}
+      <div className="w-full bg-white flex flex-col mb-6">
       {/* Outer card */}
       <div className="bg-white shadow-lg rounded-3xl px-3 py-2 space-y-1">
           {/* Doctor Info */}
@@ -77,17 +87,32 @@ const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
 
           {/* Video Call - Only show if appointment is not completed */}
           {!appointment.isCompleted && !appointment.cancelled && (
-            <div className="flex flex-row items-center justify-between bg-gray-50 rounded-2xl border gap-2 py-2">
-              <div className="flex items-center gap-2">
-                <div className="bg-purple-100 rounded-xl p-2">
-                  <Video className="text-purple-600 w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="bg-gray-50 rounded-2xl border gap-2 py-2 px-3">
+              <div className="flex flex-row items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="bg-purple-100 rounded-xl p-2">
+                    <Video className="text-purple-600 w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <p className="font-medium text-gray-700 text-xs sm:text-sm">Video Call</p>
                 </div>
-                <p className="font-medium text-gray-700 text-xs sm:text-sm">Video Call</p>
-              </div>
 
-              <button className="rounded-full bg-purple-600 text-white font-semibold shadow text-xs sm:text-sm px-3 py-1">
-                Start Now →
-              </button>
+                <button 
+                  onClick={handleStartVideoCall}
+                  className="rounded-full bg-purple-600 text-white font-semibold shadow text-xs sm:text-sm px-3 py-1 hover:bg-purple-700 transition-colors"
+                >
+                  Start Now →
+                </button>
+              </div>
+              
+              {/* Reschedule button below Start Now - same size as Start Now */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleReschedule}
+                  className="rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow text-xs sm:text-sm px-3 py-1 transition-colors"
+                >
+                  Reschedule
+                </button>
+              </div>
             </div>
           )}
 
@@ -136,27 +161,8 @@ const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
           )}
         </div>
 
-      {/* Bottom Action Buttons - Only show if appointment exists and is not completed/cancelled */}
-      {appointmentProp && !appointment.isCompleted && !appointment.cancelled && (
-        <div className="w-full flex flex-row gap-2 bg-white mt-4">
-          {!appointment.payment && (
-            <button
-              onClick={handlePayment}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl shadow text-xs sm:text-sm py-2 transition-colors"
-            >
-              Pay Now
-            </button>
-          )}
-
-          <button
-            onClick={handleReschedule}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow text-xs sm:text-sm py-2 transition-colors"
-          >
-            {appointment.payment ? "View Details" : "Reschedule"}
-          </button>
-        </div>
-      )}
     </div>
+    </>
   );
 };
 

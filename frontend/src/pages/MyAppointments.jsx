@@ -11,7 +11,7 @@ const MyAppointments = () => {
     const navigate = useNavigate()
 
     const [appointments, setAppointments] = useState([])
-    const [payment, setPayment] = useState('')
+    // const [payment, setPayment] = useState('') // Not needed with mock payment
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -26,7 +26,8 @@ const MyAppointments = () => {
         try {
 
             const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } })
-            setAppointments(data.appointments.reverse())
+            // Backend already sorts by date descending (newest first), so no need to reverse
+            setAppointments(data.appointments || [])
 
         } catch (error) {
             console.log(error)
@@ -39,63 +40,81 @@ const MyAppointments = () => {
         navigate(`/appointment/${docId}?reschedule=${appointmentId}`)
     }
 
-    const initPay = (order) => {
-        const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-            amount: order.amount,
-            currency: order.currency,
-            name: 'Appointment Payment',
-            description: "Appointment Payment",
-            order_id: order.id,
-            receipt: order.receipt,
-            handler: async (response) => {
+    // REAL PAYMENT METHODS - COMMENTED OUT (Using mock payment instead)
+    // TODO: Uncomment when ready to use real payment integration
+    
+    // const initPay = (order) => {
+    //     const options = {
+    //         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+    //         amount: order.amount,
+    //         currency: order.currency,
+    //         name: 'Appointment Payment',
+    //         description: "Appointment Payment",
+    //         order_id: order.id,
+    //         receipt: order.receipt,
+    //         handler: async (response) => {
+    //             console.log(response)
+    //             try {
+    //                 const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", response, { headers: { token } });
+    //                 if (data.success) {
+    //                     navigate('/my-appointments')
+    //                     getUserAppointments()
+    //                 }
+    //             } catch (error) {
+    //                 console.log(error)
+    //                 toast.error(error.message)
+    //             }
+    //         }
+    //     };
+    //     const rzp = new window.Razorpay(options);
+    //     rzp.open();
+    // };
 
-                console.log(response)
+    // // Function to make payment using razorpay
+    // const appointmentRazorpay = async (appointmentId) => {
+    //     try {
+    //         const { data } = await axios.post(backendUrl + '/api/user/payment-razorpay', { appointmentId }, { headers: { token } })
+    //         if (data.success) {
+    //             initPay(data.order)
+    //         }else{
+    //             toast.error(data.message)
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //         toast.error(error.message)
+    //     }
+    // }
 
-                try {
-                    const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", response, { headers: { token } });
-                    if (data.success) {
-                        navigate('/my-appointments')
-                        getUserAppointments()
-                    }
-                } catch (error) {
-                    console.log(error)
-                    toast.error(error.message)
-                }
-            }
-        };
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-    };
+    // // Function to make payment using stripe
+    // const appointmentStripe = async (appointmentId) => {
+    //     try {
+    //         const { data } = await axios.post(backendUrl + '/api/user/payment-stripe', { appointmentId }, { headers: { token } })
+    //         if (data.success) {
+    //             const { session_url } = data
+    //             window.location.replace(session_url)
+    //         }else{
+    //             toast.error(data.message)
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //         toast.error(error.message)
+    //     }
+    // }
 
-    // Function to make payment using razorpay
-    const appointmentRazorpay = async (appointmentId) => {
+    // MOCK PAYMENT FUNCTION - For testing purposes
+    // TODO: Replace with real payment integration when ready
+    const mockPayment = async (appointmentId) => {
         try {
-            const { data } = await axios.post(backendUrl + '/api/user/payment-razorpay', { appointmentId }, { headers: { token } })
+            const { data } = await axios.post(backendUrl + '/api/user/mock-payment', { appointmentId }, { headers: { token } })
             if (data.success) {
-                initPay(data.order)
-            }else{
+                toast.success(data.message || 'Payment Done')
+                getUserAppointments()
+            } else {
                 toast.error(data.message)
             }
         } catch (error) {
             console.log(error)
-            toast.error(error.message)
-        }
-    }
-
-    // Function to make payment using stripe
-    const appointmentStripe = async (appointmentId) => {
-        try {
-            const { data } = await axios.post(backendUrl + '/api/user/payment-stripe', { appointmentId }, { headers: { token } })
-            if (data.success) {
-                const { session_url } = data
-                window.location.replace(session_url)
-            }else{
-                toast.error(data.message)
-            }
-        } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            toast.error(error.message || 'Payment failed')
         }
     }
 
@@ -126,9 +145,21 @@ const MyAppointments = () => {
                         </div>
                         <div></div>
                         <div className='flex flex-col gap-2 justify-end text-sm text-center'>
-                            {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && <button onClick={() => setPayment(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'>Pay Online</button>}
+                            {/* MOCK PAYMENT - Pay Online button directly triggers mock payment */}
+                            {!item.cancelled && !item.payment && !item.isCompleted && (
+                                <button 
+                                    onClick={() => mockPayment(item._id)} 
+                                    className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'
+                                >
+                                    Pay Online
+                                </button>
+                            )}
+                            
+                            {/* REAL PAYMENT METHODS - COMMENTED OUT */}
+                            {/* {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && <button onClick={() => setPayment(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'>Pay Online</button>}
                             {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentStripe(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.stripe_logo} alt="" /></button>}
-                            {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentRazorpay(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.razorpay_logo} alt="" /></button>}
+                            {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentRazorpay(item._id)} className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center'><img className='max-w-20 max-h-5' src={assets.razorpay_logo} alt="" /></button>} */}
+                            
                             {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-48 py-2 border rounded text-[#696969]  bg-[#EAEFFF]'>Paid</button>}
 
                             {item.isCompleted && <button className='sm:min-w-48 py-2 border border-green-500 rounded text-green-500'>Completed</button>}

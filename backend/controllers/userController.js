@@ -7,6 +7,7 @@ import appointmentModel from "../models/appointmentModel.js";
 import { v2 as cloudinary } from 'cloudinary'
 import stripe from "stripe";
 import razorpay from 'razorpay';
+import crypto from 'crypto';
 
 // Gateway Initialize
 const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY)
@@ -134,8 +135,20 @@ const updateProfile = async (req, res) => {
 const bookAppointment = async (req, res) => {
 
     try {
-
         const { userId, docId, slotDate, slotTime } = req.body
+        
+        // Check if user already has an appointment at the same date and time
+        const existingAppointment = await appointmentModel.findOne({
+            userId,
+            slotDate,
+            slotTime,
+            cancelled: false
+        })
+
+        if (existingAppointment) {
+            return res.json({ success: false, message: 'You already booked a slot in this date and time' })
+        }
+
         const docData = await doctorModel.findById(docId).select("-password")
 
         if (!docData.available) {
@@ -244,6 +257,19 @@ const rescheduleAppointment = async (req, res) => {
 
         const { docId, slotDate, slotTime } = appointmentData
 
+        // Check if user already has another appointment at the new date and time (excluding current appointment)
+        const existingAppointment = await appointmentModel.findOne({
+            userId,
+            slotDate: newSlotDate,
+            slotTime: newSlotTime,
+            cancelled: false,
+            _id: { $ne: appointmentId } // Exclude the current appointment being rescheduled
+        })
+
+        if (existingAppointment) {
+            return res.json({ success: false, message: 'You already booked a slot in this date and time' })
+        }
+
         // Get doctor data
         const doctorData = await doctorModel.findById(docId)
 
@@ -291,7 +317,7 @@ const listAppointment = async (req, res) => {
     try {
 
         const { userId } = req.body
-        const appointments = await appointmentModel.find({ userId })
+        const appointments = await appointmentModel.find({ userId }).sort({ date: -1 })
 
         res.json({ success: true, appointments })
 
@@ -409,6 +435,106 @@ const verifyStripe = async (req, res) => {
 
 }
 
+// MOCK PAYMENT API - For testing purposes only
+// TODO: Replace with real payment integration when ready
+const mockPayment = async (req, res) => {
+    try {
+        const { appointmentId } = req.body
+        const appointmentData = await appointmentModel.findById(appointmentId)
+
+        if (!appointmentData) {
+            return res.json({ success: false, message: 'Appointment not found' })
+        }
+
+        if (appointmentData.cancelled) {
+            return res.json({ success: false, message: 'Appointment Cancelled' })
+        }
+
+        if (appointmentData.payment) {
+            return res.json({ success: false, message: 'Payment already completed' })
+        }
+
+        // Mark payment as done
+        await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true })
+
+        res.json({ success: true, message: 'Payment Done' })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// Generate ZegoCloud Token for video calling
+const generateZegoToken = async (req, res) => {
+    try {
+        // userId is set by authUser middleware from JWT token
+        const { userId } = req.body
+        const { roomID } = req.body
+
+        if (!userId) {
+            return res.json({ success: false, message: 'User ID is required' })
+        }
+
+        const appID = parseInt(process.env.ZEGOCLOUD_APP_ID || '0')
+        const serverSecret = process.env.ZEGOCLOUD_SERVER_SECRET || ''
+
+        if (!appID || !serverSecret) {
+            return res.json({ success: false, message: 'ZegoCloud credentials not configured. Please check ZEGOCLOUD_APP_ID and ZEGOCLOUD_SERVER_SECRET in environment variables.' })
+        }
+
+        // Token expiration time (24 hours)
+        const effectiveTimeInSeconds = 3600 * 24
+
+        // Generate token using user ID from authenticated token
+        const token = generateToken04(
+            appID,
+            String(userId),
+            serverSecret,
+            effectiveTimeInSeconds,
+            ''
+        )
+
+        res.json({ 
+            success: true, 
+            token,
+            appID,
+            roomID: roomID || `room_${userId}`
+        })
+
+    } catch (error) {
+        console.log('ZegoCloud token generation error:', error)
+        res.json({ success: false, message: error.message || 'Failed to generate token' })
+    }
+}
+
+// ZegoCloud Token Generation Function
+function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload) {
+    if (!appID || !userID || !secret) {
+        throw new Error('appID, userID, and secret are required')
+    }
+
+    const createTime = Math.floor(Date.now() / 1000)
+    const tokenInfo = {
+        app_id: appID,
+        user_id: userID,
+        nonce: Math.floor(Math.random() * 2147483647),
+        ctime: createTime,
+        expire: createTime + effectiveTimeInSeconds,
+        payload: payload || ''
+    }
+
+    const tokenString = JSON.stringify(tokenInfo)
+    const iv = Buffer.from(secret.substring(0, 16), 'utf8')
+    const key = Buffer.from(secret.substring(0, 16), 'utf8')
+    
+    const cipher = crypto.createCipheriv('aes-128-cbc', key, iv)
+    let encrypted = cipher.update(tokenString, 'utf8', 'base64')
+    encrypted += cipher.final('base64')
+
+    return '04' + encrypted
+}
+
 export {
     loginUser,
     registerUser,
@@ -421,5 +547,7 @@ export {
     paymentRazorpay,
     verifyRazorpay,
     paymentStripe,
-    verifyStripe
+    verifyStripe,
+    mockPayment,
+    generateZegoToken
 }

@@ -15,7 +15,7 @@ const Bookings = () => {
   const tabs = [
     { id: "active", label: "Active" },
     { id: "upcoming", label: "Upcoming" },
-    { id: "past", label: "Past Bookings" },
+    { id: "completed", label: "Completed" },
   ];
 
   useEffect(() => {
@@ -46,27 +46,42 @@ const Bookings = () => {
     }
   }, [token, backendUrl, isLoggedIn, navigate]);
 
-  // Filter appointments based on tab
+  // Filter and sort appointments based on tab
   const getFilteredAppointments = () => {
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-    return appointments.filter(apt => {
+    const filtered = appointments.filter(apt => {
       if (apt.cancelled) return false;
-      
       const [day, month, year] = apt.slotDate.split('_').map(Number);
       const appointmentDate = new Date(year, month - 1, day);
       
       if (tab === "active") {
-        // Active: not cancelled, not completed, payment done, date is today or future
-        return !apt.isCompleted && apt.payment && appointmentDate >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const isToday = appointmentDate.getTime() === today.getTime();
+        return !apt.isCompleted && apt.payment && isToday;
       } else if (tab === "upcoming") {
-        // Upcoming: not cancelled, not completed, date is future
-        return !apt.isCompleted && appointmentDate >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      } else if (tab === "past") {
-        // Past: completed or date is past
-        return apt.isCompleted || appointmentDate < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (apt.isCompleted) return false;
+        if (appointmentDate < today) return false;
+        const isToday = appointmentDate.getTime() === today.getTime();
+        return !(apt.payment && isToday);
+      } else if (tab === "completed") {
+        return apt.isCompleted || appointmentDate < today;
       }
       return false;
+    });
+
+    // Sort appointments based on tab
+    return filtered.sort((a, b) => {
+      const [dayA, monthA, yearA] = a.slotDate.split('_').map(Number);
+      const [dayB, monthB, yearB] = b.slotDate.split('_').map(Number);
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      
+      if (tab === "completed") {
+        return dateB - dateA;
+      } else {
+        return dateA - dateB;
+      }
     });
   };
 
@@ -153,8 +168,8 @@ const Bookings = () => {
               </div>
             )}
 
-            {/* PAST BOOKINGS */}
-            {tab === "past" && (
+            {/* COMPLETED BOOKINGS */}
+            {tab === "completed" && (
               <div className="w-full max-w-4xl px-4">
                 {filteredAppointments.length > 0 ? (
                   <>
@@ -167,7 +182,7 @@ const Bookings = () => {
                   </>
                 ) : (
                   <div className="text-center text-gray-700 text-base sm:text-lg py-8">
-                    <p>Your past bookings will appear here.</p>
+                    <p>Your Completed bookings will appear here.</p>
                   </div>
                 )}
               </div>
