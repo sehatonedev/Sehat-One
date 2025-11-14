@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Mic, MicOff, Video, VideoOff, MessageSquare, Send } from 'lucide-react';
-import * as ZegoExpressEngine from 'zego-express-engine-webrtc';
 import axios from 'axios';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
@@ -103,26 +102,89 @@ const VideoCall = ({ appointment, onClose }) => {
           return;
         }
         
-        // Create ZegoExpressEngine instance
-        // Handle different export patterns
-        let ZegoEngineClass;
-        if (typeof ZegoExpressEngine === 'function') {
-          ZegoEngineClass = ZegoExpressEngine;
-        } else if (ZegoExpressEngine.default) {
-          ZegoEngineClass = ZegoExpressEngine.default;
-        } else if (ZegoExpressEngine.ZegoExpressEngine) {
-          ZegoEngineClass = ZegoExpressEngine.ZegoExpressEngine;
+        // Dynamically import ZegoCloud SDK - this works better in production
+        const zegoModule = await import('zego-express-engine-webrtc');
+        
+        // Try all possible export patterns
+        let ZegoEngineClass = null;
+        
+        // Check for default export
+        if (zegoModule.default) {
+          if (typeof zegoModule.default === 'function') {
+            ZegoEngineClass = zegoModule.default;
+          } else if (zegoModule.default.ZegoExpressEngine) {
+            ZegoEngineClass = zegoModule.default.ZegoExpressEngine;
+          } else if (zegoModule.default.default) {
+            ZegoEngineClass = zegoModule.default.default;
+          }
+        }
+        
+        // Check for named export
+        if (!ZegoEngineClass && zegoModule.ZegoExpressEngine) {
+          ZegoEngineClass = zegoModule.ZegoExpressEngine;
+        }
+        
+        // Check if the module itself is the constructor
+        if (!ZegoEngineClass && typeof zegoModule === 'function') {
+          ZegoEngineClass = zegoModule;
+        }
+        
+        // Check for nested exports
+        if (!ZegoEngineClass && zegoModule.ZegoExpressEngine && typeof zegoModule.ZegoExpressEngine === 'function') {
+          ZegoEngineClass = zegoModule.ZegoExpressEngine;
+        }
+
+        // Final check - if still not found, try accessing it differently
+        if (!ZegoEngineClass) {
+          // Try accessing via window if available (some builds expose it globally)
+          if (typeof window !== 'undefined' && window.ZegoExpressEngine) {
+            ZegoEngineClass = window.ZegoExpressEngine;
+          } else {
+            // Last resort - try to find any function in the module
+            for (const key in zegoModule) {
+              if (typeof zegoModule[key] === 'function' && key.toLowerCase().includes('zego')) {
+                ZegoEngineClass = zegoModule[key];
+                break;
+              }
+            }
+          }
+        }
+
+        // If we found the class, try to create instance
+        let zegoEngine = null;
+        
+        if (ZegoEngineClass && typeof ZegoEngineClass === 'function') {
+          try {
+            // Try standard constructor
+            zegoEngine = new ZegoEngineClass(appID, data.token);
+          } catch (constructorError) {
+            console.warn('Standard constructor failed, trying alternative:', constructorError);
+            // Try alternative: maybe it needs to be called differently
+            try {
+              if (ZegoEngineClass.create) {
+                zegoEngine = ZegoEngineClass.create(appID, data.token);
+              } else if (ZegoEngineClass.init) {
+                zegoEngine = ZegoEngineClass.init(appID, data.token);
+              } else {
+                // Try calling without new
+                zegoEngine = ZegoEngineClass(appID, data.token);
+              }
+            } catch (altError) {
+              console.error('All initialization methods failed:', altError);
+              throw new Error('Failed to initialize ZegoExpressEngine. Please check the SDK version and documentation.');
+            }
+          }
         } else {
-          // Try dynamic import as fallback
-          const zegoModule = await import('zego-express-engine-webrtc');
-          ZegoEngineClass = zegoModule.default || zegoModule.ZegoExpressEngine || zegoModule;
+          // Log the module structure for debugging
+          console.error('ZegoCloud module structure:', zegoModule);
+          console.error('Available keys:', Object.keys(zegoModule || {}));
+          throw new Error('ZegoExpressEngine is not a constructor. Available exports: ' + JSON.stringify(Object.keys(zegoModule || {})));
         }
 
-        if (typeof ZegoEngineClass !== 'function') {
-          throw new Error('ZegoExpressEngine is not a constructor. Please use ZegoCloud UIKits instead.');
+        if (!zegoEngine) {
+          throw new Error('Failed to create ZegoExpressEngine instance');
         }
 
-        const zegoEngine = new ZegoEngineClass(appID, data.token);
         setZg(zegoEngine);
 
         // Set event handlers
@@ -219,9 +281,6 @@ const VideoCall = ({ appointment, onClose }) => {
       };
       setMessages([...messages, newMessage]);
       setMessageText('');
-      
-      // In a real implementation, you would send this via ZegoCloud's messaging
-      // For now, we'll just add it locally
     }
   };
 
