@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUser, registerUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, rescheduleAppointment, paymentRazorpay, verifyRazorpay, paymentStripe, verifyStripe, mockPayment, generateZegoToken } from '../controllers/userController.js';
+import { loginUser, registerUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, rescheduleAppointment, paymentRazorpay, verifyRazorpay, paymentStripe, verifyStripe, mockPayment, generateZegoToken, uploadReport, getUserReports, deleteReport } from '../controllers/userController.js';
 import upload from '../middleware/multer.js';
 import authUser from '../middleware/authUser.js';
 const userRouter = express.Router();
@@ -22,5 +22,9 @@ userRouter.post("/reschedule-appointment", authUser, rescheduleAppointment)
 userRouter.post("/mock-payment", authUser, mockPayment)
 // ZegoCloud token generation for video calling
 userRouter.post("/zego-token", authUser, generateZegoToken)
+// Report management endpoints
+userRouter.post("/upload-report", upload.single('file'), authUser, uploadReport)
+userRouter.get("/reports", authUser, getUserReports)
+userRouter.post("/delete-report", authUser, deleteReport)
 
 export default userRouter;

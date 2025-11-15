@@ -101,9 +101,52 @@ const MyAppointments = () => {
     //     }
     // }
 
+    // Helper function to check if appointment time has passed
+    const isAppointmentPast = (slotDate, slotTime) => {
+        const [day, month, year] = slotDate.split('_').map(Number);
+        
+        // Parse time - handle both 12-hour (11:00 AM) and 24-hour (11:00) formats
+        let hours = 0;
+        let minutes = 0;
+        
+        if (slotTime) {
+            const timeStr = slotTime.trim().toUpperCase();
+            const hasAMPM = timeStr.includes('AM') || timeStr.includes('PM');
+            
+            if (hasAMPM) {
+                // 12-hour format: "11:00 AM" or "11:00 PM"
+                const parts = timeStr.replace(/\s*(AM|PM)\s*/i, '').split(':');
+                hours = parseInt(parts[0]) || 0;
+                minutes = parseInt(parts[1]) || 0;
+                
+                if (timeStr.includes('PM') && hours !== 12) {
+                    hours += 12;
+                } else if (timeStr.includes('AM') && hours === 12) {
+                    hours = 0;
+                }
+            } else {
+                // 24-hour format: "11:00"
+                const parts = slotTime.split(':');
+                hours = parseInt(parts[0]) || 0;
+                minutes = parseInt(parts[1]) || 0;
+            }
+        }
+        
+        const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+        const now = new Date();
+        
+        return appointmentDateTime < now;
+    };
+
     // MOCK PAYMENT FUNCTION - For testing purposes
     // TODO: Replace with real payment integration when ready
-    const mockPayment = async (appointmentId) => {
+    const mockPayment = async (appointmentId, appointment) => {
+        // Check if appointment time has passed
+        if (appointment && isAppointmentPast(appointment.slotDate, appointment.slotTime)) {
+            toast.warning('Cannot pay for an appointment that has already passed. This appointment has been moved to Completed.')
+            return;
+        }
+
         try {
             const { data } = await axios.post(backendUrl + '/api/user/mock-payment', { appointmentId }, { headers: { token } })
             if (data.success) {
@@ -146,9 +189,10 @@ const MyAppointments = () => {
                         <div></div>
                         <div className='flex flex-col gap-2 justify-end text-sm text-center'>
                             {/* MOCK PAYMENT - Pay Online button directly triggers mock payment */}
-                            {!item.cancelled && !item.payment && !item.isCompleted && (
+                            {/* Only show Pay Online button if appointment time hasn't passed */}
+                            {!item.cancelled && !item.payment && !item.isCompleted && !isAppointmentPast(item.slotDate, item.slotTime) && (
                                 <button 
-                                    onClick={() => mockPayment(item._id)} 
+                                    onClick={() => mockPayment(item._id, item)} 
                                     className='text-[#696969] sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'
                                 >
                                     Pay Online

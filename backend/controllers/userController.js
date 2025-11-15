@@ -4,6 +4,7 @@ import validator from "validator";
 import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import reportModel from "../models/reportModel.js";
 import { v2 as cloudinary } from 'cloudinary'
 import stripe from "stripe";
 import razorpay from 'razorpay';
@@ -535,6 +536,111 @@ function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload)
     return '04' + encrypted
 }
 
+// API to upload user medical report
+const uploadReport = async (req, res) => {
+    try {
+        const { userId } = req.body
+        const file = req.file
+
+        if (!file) {
+            return res.json({ success: false, message: 'No file uploaded' })
+        }
+
+        // Validate file size (10 MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            return res.json({ success: false, message: 'File size must be 10 MB or less' })
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+        if (!validTypes.includes(file.mimetype)) {
+            return res.json({ success: false, message: 'Invalid file type. Please upload an image or PDF' })
+        }
+
+        // Upload to Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+            resource_type: file.mimetype.includes('pdf') ? 'raw' : 'image',
+            folder: 'medical_reports'
+        })
+
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2)
+        const reportType = file.mimetype.includes('pdf') ? 'pdf' : 'image'
+        const now = new Date()
+
+        const reportData = {
+            userId,
+            name: file.originalname,
+            url: uploadResult.secure_url,
+            type: reportType,
+            size: fileSize + " MB",
+            uploadedDate: now.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }),
+            uploadedTime: now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            date: Date.now(),
+            source: "user"
+        }
+
+        const newReport = new reportModel(reportData)
+        await newReport.save()
+
+        res.json({ success: true, message: 'Report uploaded successfully', report: newReport })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// API to get user uploaded reports
+const getUserReports = async (req, res) => {
+    try {
+        const { userId } = req.body
+        const reports = await reportModel.find({ userId, source: "user" }).sort({ date: -1 })
+
+        res.json({ success: true, reports })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// API to delete user uploaded report
+const deleteReport = async (req, res) => {
+    try {
+        const { userId, reportId } = req.body
+
+        const report = await reportModel.findById(reportId)
+
+        if (!report) {
+            return res.json({ success: false, message: 'Report not found' })
+        }
+
+        // Verify report belongs to user
+        if (report.userId !== userId) {
+            return res.json({ success: false, message: 'Unauthorized action' })
+        }
+
+        // Delete from Cloudinary (optional - can be done later)
+        // Extract public_id from URL and delete
+
+        // Delete from database
+        await reportModel.findByIdAndDelete(reportId)
+
+        res.json({ success: true, message: 'Report deleted successfully' })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
 export {
     loginUser,
     registerUser,
@@ -549,5 +655,8 @@ export {
     paymentStripe,
     verifyStripe,
     mockPayment,
-    generateZegoToken
+    generateZegoToken,
+    uploadReport,
+    getUserReports,
+    deleteReport
 }

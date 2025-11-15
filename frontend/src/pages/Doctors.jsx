@@ -32,7 +32,7 @@ const Doctors = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* --- Fixed Header --- */}
       <div
         className={`fixed top-14 sm:top-16 left-0 w-full bg-white z-40 transition-all duration-300 ${
@@ -41,10 +41,13 @@ const Doctors = () => {
       >
         <div className="flex flex-col gap-4 sm:gap-5 md:gap-6 px-4 md:px-10 py-4 sm:py-5">
           {/* --- Title --- */}
-          <div className="w-full bg-blue-600 py-3 sm:py-4 flex justify-center rounded-xl">
-            <h1 className="text-2xl md:text-3xl font-semibold text-white tracking-wide">
+          <div className="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-6 sm:py-8 flex flex-col items-center justify-center rounded-2xl shadow-lg">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-wide mb-2">
               Our Top Doctors
             </h1>
+            <p className="text-blue-100 text-sm sm:text-base text-center px-4">
+              Find and book appointments with experienced healthcare professionals
+            </p>
           </div>
 
           {/* --- Search Bar --- */}
@@ -80,7 +83,7 @@ const Doctors = () => {
       </div>
 
       {/* --- Doctor Cards Section --- */}
-      <div className="pt-[220px] sm:pt-[220px] md:pt-[260px] px-4 md:px-10 pb-20">
+      <div className="pt-[280px] sm:pt-[280px] md:pt-[320px] px-4 md:px-10 pb-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
           {filteredDoctors.map((doc) => (
             <div

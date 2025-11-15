@@ -45,9 +45,6 @@ const Medicine = () => {
           
           {/*  MEDICINE OVERVIEW */}
           <div className="bg-blue-200 p-8 rounded-xl shadow">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">
-              💊 Order Medicines Easily
-            </h1>
 
             <p className="text-gray-700 text-lg">
               Get genuine medicines delivered quickly at your doorstep.  

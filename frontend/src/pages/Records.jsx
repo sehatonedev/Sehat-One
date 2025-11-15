@@ -13,38 +13,39 @@ const Records = () => {
   ];
 
   return (
-    <div className="w-full min-h-screen bg-white px-4 sm:px-6 lg:px-10 py-6">
+    <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 px-4 sm:px-6 lg:px-10 py-6">
 
-      {/* Page Heading */}
-      <div className="w-full bg-blue-600 py-3 sm:py-4 flex justify-center rounded-xl mb-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white tracking-wide">
-          My Records
+      {/* Page Heading with Description */}
+      <div className="w-full bg-gradient-to-r from-blue-600 to-blue-700 py-6 sm:py-8 flex flex-col items-center justify-center rounded-2xl mb-8 shadow-lg">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-wide mb-2">
+          My Medical Records
         </h1>
+        <p className="text-blue-100 text-sm sm:text-base text-center px-4">
+          Access your consultation history, prescriptions, and medical reports all in one place
+        </p>
       </div>
 
-      {/* Tabs */}
-{/* Tabs */}
-<div className="flex justify-center mb-8 overflow-x-auto scrollbar-none">
-  <div className="flex gap-4 bg-gray-100 px-3 py-2 rounded-full shadow-sm whitespace-nowrap">
-    {tabs.map(t => (
-      <button
-        key={t.id}
-        onClick={() => setTab(t.id)}
-        className={`px-3 sm:px-5 py-1.5 rounded-full text-sm sm:text-base font-semibold transition-all 
-          ${tab === t.id
-            ? "bg-blue-600 text-white shadow"
-            : "text-gray-700 hover:bg-blue-100"
-          }`}
-      >
-        {t.label}
-      </button>
-    ))}
-  </div>
-</div>
+      {/* Enhanced Tabs */}
+      <div className="flex justify-center mb-8 overflow-x-auto scrollbar-none">
+        <div className="flex gap-2 sm:gap-4 bg-white px-3 sm:px-4 py-2 rounded-full shadow-md whitespace-nowrap border border-gray-200">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-semibold transition-all duration-300
+                ${tab === t.id
+                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-
-      {/* Active Tab Content */}
-      <div className="w-full">
+      {/* Active Tab Content with Animation */}
+      <div className="w-full animate-fadeIn">
         {tab === "consultations" && <Consultations />}
         {tab === "prescriptions" && <Prescriptions />}
         {tab === "reports" && <Reports />}

@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
+import { v2 as cloudinary } from 'cloudinary'
 
 // API for doctor Login 
 const loginDoctor = async (req, res) => {
@@ -190,6 +191,136 @@ const doctorDashboard = async (req, res) => {
     }
 }
 
+// API to upload report for an appointment (doctor side)
+const uploadAppointmentReport = async (req, res) => {
+    try {
+        const { docId, appointmentId } = req.body
+        const file = req.file
+
+        if (!file) {
+            return res.json({ success: false, message: 'No file uploaded' })
+        }
+
+        // Validate file size (10 MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            return res.json({ success: false, message: 'File size must be 10 MB or less' })
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+        if (!validTypes.includes(file.mimetype)) {
+            return res.json({ success: false, message: 'Invalid file type. Please upload an image or PDF' })
+        }
+
+        // Verify appointment belongs to doctor
+        const appointment = await appointmentModel.findById(appointmentId)
+        if (!appointment) {
+            return res.json({ success: false, message: 'Appointment not found' })
+        }
+
+        if (appointment.docId !== docId) {
+            return res.json({ success: false, message: 'Unauthorized action' })
+        }
+
+        // Upload to Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+            resource_type: file.mimetype.includes('pdf') ? 'raw' : 'image',
+            folder: 'doctor_reports'
+        })
+
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2)
+        const reportType = file.mimetype.includes('pdf') ? 'pdf' : 'image'
+        const now = new Date()
+
+        // Update appointment with report details
+        await appointmentModel.findByIdAndUpdate(appointmentId, {
+            reportUrl: uploadResult.secure_url,
+            reportType: reportType,
+            reportSize: fileSize + " MB",
+            reportUploadedDate: now.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }),
+            reportUploadedTime: now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        })
+
+        res.json({ success: true, message: 'Report uploaded successfully' })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// API to upload prescription for an appointment (doctor side)
+const uploadAppointmentPrescription = async (req, res) => {
+    try {
+        const { docId, appointmentId } = req.body
+        const file = req.file
+
+        if (!file) {
+            return res.json({ success: false, message: 'No file uploaded' })
+        }
+
+        // Validate file size (10 MB max)
+        if (file.size > 10 * 1024 * 1024) {
+            return res.json({ success: false, message: 'File size must be 10 MB or less' })
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+        if (!validTypes.includes(file.mimetype)) {
+            return res.json({ success: false, message: 'Invalid file type. Please upload an image or PDF' })
+        }
+
+        // Verify appointment belongs to doctor
+        const appointment = await appointmentModel.findById(appointmentId)
+        if (!appointment) {
+            return res.json({ success: false, message: 'Appointment not found' })
+        }
+
+        if (appointment.docId !== docId) {
+            return res.json({ success: false, message: 'Unauthorized action' })
+        }
+
+        // Upload to Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+            resource_type: file.mimetype.includes('pdf') ? 'raw' : 'image',
+            folder: 'prescriptions'
+        })
+
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2)
+        const prescriptionType = file.mimetype.includes('pdf') ? 'pdf' : 'image'
+        const now = new Date()
+
+        // Update appointment with prescription details
+        await appointmentModel.findByIdAndUpdate(appointmentId, {
+            prescriptionUrl: uploadResult.secure_url,
+            prescriptionType: prescriptionType,
+            prescriptionSize: fileSize + " MB",
+            prescriptionUploadedDate: now.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }),
+            prescriptionUploadedTime: now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        })
+
+        res.json({ success: true, message: 'Prescription uploaded successfully' })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
 export {
     loginDoctor,
     appointmentsDoctor,
@@ -199,5 +330,6 @@ export {
     appointmentComplete,
     doctorDashboard,
     doctorProfile,
-    updateDoctorProfile
+    updateDoctorProfile,
+    uploadAppointmentReport
 }

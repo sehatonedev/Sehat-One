@@ -44,8 +44,8 @@ const TopDoctors = () => {
           <div
             key={index}
             onClick={() => {
-              navigate(`/appointment/${doc._id || index}`);
-              scrollTo(0, 0);
+              navigate("/doctors");
+              window.scrollTo(0, 0);
             }}
             className="flex flex-row sm:flex-col min-w-[250px] sm:min-w-[220px] md:min-w-[250px] bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden hover:-translate-y-1"
           >
@@ -69,7 +69,8 @@ const TopDoctors = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate("/doctors");
+                    navigate(`/appointment/${doc._id || index}`);
+                    window.scrollTo(0, 0);
                   }}
                   className="bg-blue-100 text-blue-700 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base md:text-lg font-medium hover:bg-blue-200 transition"
                 >
