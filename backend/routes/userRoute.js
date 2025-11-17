@@ -24,7 +24,9 @@ userRouter.post("/mock-payment", authUser, mockPayment)
 userRouter.post("/zego-token", authUser, generateZegoToken)
 // Report management endpoints
 userRouter.post("/upload-report", upload.single('file'), authUser, uploadReport)
-userRouter.get("/reports", authUser, getUserReports)
+userRouter.route("/reports")
+    .get(authUser, getUserReports)
+    .post(authUser, getUserReports)
 userRouter.post("/delete-report", authUser, deleteReport)
 
 export default userRouter;
