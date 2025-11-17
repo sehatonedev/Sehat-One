@@ -13,7 +13,6 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true);
 
   const tabs = [
-    { id: "active", label: "Active" },
     { id: "upcoming", label: "Upcoming" },
     { id: "completed", label: "Completed" },
   ];
@@ -83,7 +82,6 @@ const Bookings = () => {
   // Filter and sort appointments based on tab
   const getFilteredAppointments = () => {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
     const filtered = appointments.filter(apt => {
       // Skip cancelled appointments
@@ -95,17 +93,10 @@ const Bookings = () => {
       // Check if appointment time has passed
       const isPast = appointmentDateTime < now;
       
-      // Get appointment date (without time) for today check
-      const appointmentDate = new Date(appointmentDateTime.getFullYear(), appointmentDateTime.getMonth(), appointmentDateTime.getDate());
-      const isToday = appointmentDate.getTime() === today.getTime();
-      
       // Filter based on tab
       if (tab === "completed") {
         // Completed: Either marked as completed OR time has passed (regardless of payment)
         return apt.isCompleted || isPast;
-      } else if (tab === "active") {
-        // Active: Today, paid, not completed, and time hasn't passed yet
-        return !apt.isCompleted && !isPast && isToday && apt.payment;
       } else if (tab === "upcoming") {
         // Upcoming: Future appointments (not completed, time hasn't passed, can be paid or unpaid)
         return !apt.isCompleted && !isPast;
@@ -123,7 +114,7 @@ const Bookings = () => {
         // For completed, show newest first
         return dateTimeB - dateTimeA;
       } else {
-        // For active and upcoming, show earliest first
+        // For upcoming, show earliest first
         return dateTimeA - dateTimeB;
       }
     });
@@ -142,22 +133,22 @@ const Bookings = () => {
           My Bookings
         </h1>
         <p className="text-blue-100 text-sm sm:text-base text-center px-4">
-          Manage your active, upcoming, and completed appointments in one place
+          Manage your upcoming and completed appointments in one place
         </p>
       </div>
 
       {/* Tabs */}
       <div className="flex justify-center mb-6 sm:mb-8 w-full">
-        <div className="flex gap-1 sm:gap-2 bg-gray-100 px-3 sm:px-6 py-2 sm:py-3 rounded-full shadow-sm overflow-x-auto whitespace-nowrap">
+        <div className="flex bg-white px-3 sm:px-4 py-2 rounded-full shadow-md overflow-x-auto whitespace-nowrap border border-gray-200">
           {tabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-200 whitespace-nowrap
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-semibold transition-all duration-300 whitespace-nowrap
                 ${
                   tab === t.id
-                    ? "text-white bg-blue-600 shadow-md"
-                    : "text-gray-700 hover:bg-blue-100"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700"
                 }`}
             >
               {t.label}
@@ -175,26 +166,6 @@ const Bookings = () => {
           </div>
         ) : (
           <>
-            {/* ACTIVE BOOKINGS */}
-            {tab === "active" && (
-              <div className="w-full max-w-4xl px-4">
-                {filteredAppointments.length > 0 ? (
-                  <>
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
-                      Appointment Details
-                    </h1>
-                    {filteredAppointments.map((apt, index) => (
-                      <UpcomingAppointmentDetails key={apt._id || index} appointment={apt} />
-                    ))}
-                  </>
-                ) : (
-                  <div className="text-center text-gray-700 text-base sm:text-lg py-8">
-                    <p>No active bookings right now.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* UPCOMING BOOKINGS */}
             {tab === "upcoming" && (
               <div className="w-full px-4">

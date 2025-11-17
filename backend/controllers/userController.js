@@ -539,7 +539,7 @@ function generateToken04(appID, userID, secret, effectiveTimeInSeconds, payload)
 // API to upload user medical report
 const uploadReport = async (req, res) => {
     try {
-        const { userId } = req.body
+        const { userId, name, type } = req.body
         const file = req.file
 
         if (!file) {
@@ -569,7 +569,8 @@ const uploadReport = async (req, res) => {
 
         const reportData = {
             userId,
-            name: file.originalname,
+            name: name || file.originalname, // Use custom name if provided, otherwise use original filename
+            reportCategory: type || 'General', // Store the category (Prescription, Lab Test Report)
             url: uploadResult.secure_url,
             type: reportType,
             size: fileSize + " MB",

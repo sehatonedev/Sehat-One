@@ -331,5 +331,6 @@ export {
     doctorDashboard,
     doctorProfile,
     updateDoctorProfile,
-    uploadAppointmentReport
+    uploadAppointmentReport,
+    uploadAppointmentPrescription
 }

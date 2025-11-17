@@ -4,7 +4,6 @@ import TopDoctors from '../components/TopDoctors'
 import Categories from '../components/Categories'
 import Banner from '../components/Banner'
 import HowItWorks from '../components/HowItWorks'
-import UpcomingAppointment from "../components/UpcomingAppointment";
 import OurPods from '../components/OurPods'
 
 const Home = () => {
@@ -12,7 +11,6 @@ const Home = () => {
     <div>
       <Services />
       <Categories />
-      <UpcomingAppointment />
       <OurPods />
       <TopDoctors />
       <HowItWorks/>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -8,6 +9,7 @@ const Prescriptions = () => {
   const [selectedRx, setSelectedRx] = useState(null);
   const [loading, setLoading] = useState(true);
   const { backendUrl, token } = useContext(AppContext);
+  const navigate = useNavigate();
 
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -225,9 +227,20 @@ const Prescriptions = () => {
                       </a>
                     </>
                   ) : (
-                    <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium flex items-center justify-center gap-2">
-                      <span>⏳</span>
-                      Prescription Pending
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+                        <span>⏳</span>
+                        Prescription Pending
+                      </div>
+                      <button
+                        onClick={() => {
+                          // Navigate to records page with prescriptions tab active
+                          navigate('/records?tab=prescriptions');
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                      >
+                        View Prescriptions
+                      </button>
                     </div>
                   )}
                 </div>

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Video, MoreVertical } from "lucide-react";
+import { Video, MoreVertical, Calendar, Clock, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import VideoCall from "../components/VideoCall";
@@ -27,12 +27,20 @@ const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
   };
 
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   // Format date
   const formatDate = (slotDate) => {
     if (!slotDate) return "Date not available";
     const [day, month, year] = slotDate.split('_').map(Number);
     return `${day} ${months[month - 1]} ${year}`;
+  };
+
+  // Format date for completed appointments (short format)
+  const formatDateShort = (slotDate) => {
+    if (!slotDate) return "Date not available";
+    const [day, month, year] = slotDate.split('_').map(Number);
+    return `${day} ${monthsShort[month - 1]} ${year}`;
   };
 
   const handleReschedule = () => {
@@ -50,6 +58,47 @@ const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
     setShowVideoCall(true);
   };
 
+  // Check if appointment is completed (either marked as completed or time has passed)
+  const checkIfCompleted = () => {
+    if (appointment.isCompleted || (appointmentProp && appointmentProp.isCompleted)) {
+      return true;
+    }
+    // Also check if time has passed
+    if (appointment.slotDate && appointment.slotTime) {
+      const [day, month, year] = appointment.slotDate.split('_').map(Number);
+      let hours = 0;
+      let minutes = 0;
+      
+      if (appointment.slotTime) {
+        const timeStr = appointment.slotTime.trim().toUpperCase();
+        const hasAMPM = timeStr.includes('AM') || timeStr.includes('PM');
+        
+        if (hasAMPM) {
+          const parts = timeStr.replace(/\s*(AM|PM)\s*/i, '').split(':');
+          hours = parseInt(parts[0]) || 0;
+          minutes = parseInt(parts[1]) || 0;
+          
+          if (timeStr.includes('PM') && hours !== 12) {
+            hours += 12;
+          } else if (timeStr.includes('AM') && hours === 12) {
+            hours = 0;
+          }
+        } else {
+          const parts = appointment.slotTime.split(':');
+          hours = parseInt(parts[0]) || 0;
+          minutes = parseInt(parts[1]) || 0;
+        }
+      }
+      
+      const appointmentDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+      const now = new Date();
+      return appointmentDateTime < now;
+    }
+    return false;
+  };
+  
+  const isCompleted = checkIfCompleted();
+
   return (
     <>
       {showVideoCall && appointmentProp && (
@@ -60,7 +109,69 @@ const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
       )}
       <div className="w-full bg-white flex flex-col mb-6">
       {/* Outer card */}
-      <div className="bg-white shadow-lg rounded-3xl px-3 py-2 space-y-1">
+        <div className="bg-white shadow-lg rounded-3xl px-4 py-4">
+          {isCompleted ? (
+            /* Completed Appointment Layout */
+            <div className="flex flex-row justify-between items-center gap-4">
+              {/* Left Section */}
+              <div className="flex items-center gap-3 flex-grow">
+                {/* Circular Avatar */}
+                <img
+                  src={appointment.docData?.image || "https://via.placeholder.com/150"}
+                  alt="doctor"
+                  className="w-16 h-16 rounded-full object-cover bg-blue-100"
+                />
+                
+                {/* Doctor Info */}
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+                    {appointment.docData?.name || "Doctor"}
+                  </h2>
+                  <p className="text-blue-600 text-sm font-medium">
+                    {appointment.docData?.speciality || "Speciality"}
+                  </p>
+                  
+                  {/* Appointment Details with Icons */}
+                  <div className="flex flex-wrap items-center gap-4 text-gray-600 text-sm mt-1">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <span>{formatDateShort(appointment.slotDate)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span>{appointment.slotTime || "Time not set"}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span>{appointment.docData?.address?.line1 || "Location not available"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Section - Buttons */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <button className="px-4 py-2 bg-blue-50 text-blue-700 font-semibold rounded-lg text-sm hover:bg-blue-100 transition-colors">
+                  Completed
+                </button>
+                <button className={`px-4 py-2 font-semibold rounded-lg text-sm transition-colors ${
+                  appointment.payment 
+                    ? "bg-green-50 text-green-700 hover:bg-green-100" 
+                    : "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                }`}>
+                  {appointment.payment ? "Paid" : "Unpaid"}
+                </button>
+                <button 
+                  onClick={() => navigate(`/bookings`)}
+                  className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                >
+                  View Details
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Non-Completed Appointment Layout (Original) */
+            <div className="space-y-1">
           {/* Doctor Info */}
           <div className="flex flex-row justify-between items-start gap-1 py-1">
             <div className="flex items-center gap-2">
@@ -160,7 +271,8 @@ const UpcomingAppointmentDetails = ({ appointment: appointmentProp }) => {
             </div>
           )}
         </div>
-
+          )}
+        </div>
     </div>
     </>
   );

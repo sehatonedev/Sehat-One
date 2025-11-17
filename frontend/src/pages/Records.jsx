@@ -1,13 +1,21 @@
-import React, { useState } from "react";
-import Consultations from "../components/Consultations";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Prescriptions from "../components/Prescriptions";
 import Reports from "../components/Reports";
 
 const Records = () => {
-  const [tab, setTab] = useState("consultations");
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState("prescriptions");
+
+  // Check for tab query parameter on mount
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'prescriptions' || tabParam === 'reports') {
+      setTab(tabParam);
+    }
+  }, [searchParams]);
 
   const tabs = [
-    { id: "consultations", label: "Consultations" },
     { id: "prescriptions", label: "Prescriptions" },
     { id: "reports", label: "Reports" },
   ];
@@ -21,7 +29,7 @@ const Records = () => {
           My Medical Records
         </h1>
         <p className="text-blue-100 text-sm sm:text-base text-center px-4">
-          Access your consultation history, prescriptions, and medical reports all in one place
+          Access your prescriptions and medical reports all in one place
         </p>
       </div>
 
@@ -46,7 +54,6 @@ const Records = () => {
 
       {/* Active Tab Content with Animation */}
       <div className="w-full animate-fadeIn">
-        {tab === "consultations" && <Consultations />}
         {tab === "prescriptions" && <Prescriptions />}
         {tab === "reports" && <Reports />}
       </div>

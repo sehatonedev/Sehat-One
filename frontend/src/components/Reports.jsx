@@ -2,15 +2,20 @@ import React, { useState, useEffect, useContext } from "react";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { FlaskConical, FileText } from "lucide-react";
 
 const Reports = () => {
-  const [activeTab, setActiveTab] = useState("uploaded"); // "uploaded" or "doctor"
   const [userReports, setUserReports] = useState([]);
   const [doctorReports, setDoctorReports] = useState([]);
-  const [error, setError] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [loadingDoctorReports, setLoadingDoctorReports] = useState(true);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    name: '',
+    type: 'Prescription',
+    file: null
+  });
+  const [uploading, setUploading] = useState(false);
   const { token, backendUrl } = useContext(AppContext);
 
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -44,10 +49,8 @@ const Reports = () => {
       }
     };
 
-    if (activeTab === "uploaded") {
       fetchUserReports();
-    }
-  }, [token, backendUrl, activeTab]);
+  }, [token, backendUrl]);
 
   // Fetch doctor-sent reports from completed appointments
   useEffect(() => {
@@ -104,59 +107,8 @@ const Reports = () => {
       }
     };
 
-    if (activeTab === "doctor") {
       fetchDoctorReports();
-    }
-  }, [token, backendUrl, activeTab]);
-
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate size (<= 10 MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File size must be 10 MB or less.");
-      toast.error("File size must be 10 MB or less.");
-      return;
-    }
-
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
-      setError("Please upload an image (JPG, PNG, GIF) or PDF file.");
-      toast.error("Invalid file type. Please upload an image or PDF.");
-      return;
-    }
-
-    setError("");
-    setUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const { data } = await axios.post(backendUrl + '/api/user/upload-report', formData, {
-        headers: {
-          token,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      if (data.success) {
-        // Add the new report to the list
-        setUserReports([data.report, ...userReports]);
-        toast.success("Report uploaded successfully!");
-        e.target.value = ''; // Reset file input
-      } else {
-        toast.error(data.message || "Failed to upload report");
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.message || "Failed to upload report");
-    } finally {
-      setUploading(false);
-    }
-  };
+  }, [token, backendUrl]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this report?")) {
@@ -184,8 +136,77 @@ const Reports = () => {
     }
   };
 
-  const currentReports = activeTab === "uploaded" ? userReports : doctorReports;
-  const reportsCount = currentReports.length;
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate size (<= 10 MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size must be 10 MB or less.");
+        return;
+      }
+
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Please upload an image (JPG, PNG, GIF) or PDF file.");
+        return;
+      }
+
+      setUploadForm({ ...uploadForm, file });
+    }
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!uploadForm.name.trim()) {
+      toast.error("Please enter a name for your report");
+      return;
+    }
+
+    if (!uploadForm.file) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadForm.file);
+      formData.append('name', uploadForm.name);
+      formData.append('type', uploadForm.type);
+
+      const { data } = await axios.post(backendUrl + '/api/user/upload-report', formData, {
+        headers: {
+          token,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (data.success) {
+        // Add the new report to the list
+        setUserReports([data.report, ...userReports]);
+        toast.success("Report uploaded successfully!");
+        // Reset form and close modal
+        setUploadForm({ name: '', type: 'Prescription', file: null });
+        setShowUploadModal(false);
+      } else {
+        toast.error(data.message || "Failed to upload report");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || "Failed to upload report");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDecline = () => {
+    setUploadForm({ name: '', type: 'Prescription', file: null });
+    setShowUploadModal(false);
+  };
+
+  const allReports = [...userReports, ...doctorReports];
+  const reportsCount = allReports.length;
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -197,10 +218,7 @@ const Reports = () => {
               Medical Reports
             </h2>
             <p className="text-gray-600 text-sm">
-              {activeTab === "uploaded" 
-                ? `${reportsCount} ${reportsCount === 1 ? 'report' : 'reports'} uploaded`
-                : `${reportsCount} ${reportsCount === 1 ? 'report' : 'reports'} from doctors`
-              }
+              {reportsCount} {reportsCount === 1 ? 'report' : 'reports'} available
             </p>
           </div>
           <div className="bg-purple-100 rounded-full p-3">
@@ -209,289 +227,176 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex justify-center mb-6 overflow-x-auto scrollbar-none">
-        <div className="flex gap-2 sm:gap-4 bg-white px-3 sm:px-4 py-2 rounded-full shadow-md whitespace-nowrap border border-gray-200">
+      {/* Upload Button Section */}
+      <div className="flex justify-end mb-6">
           <button
-            onClick={() => setActiveTab("uploaded")}
-            className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-semibold transition-all duration-300
-              ${activeTab === "uploaded"
-                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105"
-                : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-              }`}
-          >
-            My Uploaded Reports
+          onClick={() => setShowUploadModal(true)}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold shadow-md hover:shadow-lg"
+        >
+          Upload Your Report
           </button>
-          <button
-            onClick={() => setActiveTab("doctor")}
-            className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-semibold transition-all duration-300
-              ${activeTab === "doctor"
-                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105"
-                : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-              }`}
-          >
-            Doctor Reports
-          </button>
-        </div>
       </div>
 
-      {/* Tab Content */}
-      {activeTab === "uploaded" && (
-        <>
-          {/* Upload Section - Only show for uploaded reports */}
-          <div className="bg-white rounded-xl shadow-md p-6 mb-6 border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-blue-100 rounded-full p-4">
-                  <span className="text-3xl">📤</span>
+      {/* Reports List */}
+      {loadingDoctorReports ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 border-4 border-gray-300 border-t-4 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading reports...</p>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    Upload Medical Report
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Upload images or PDF files (Max 10 MB)
-                  </p>
-                </div>
-              </div>
-              <label className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg cursor-pointer hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg font-medium flex items-center gap-2">
-                {uploading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <span>📁</span>
-                    Choose File
-                  </>
-                )}
-          <input
-            type="file"
-            className="hidden"
-            accept="image/*,application/pdf"
-            onChange={handleUpload}
-                  disabled={uploading}
-          />
-        </label>
-            </div>
-            {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            )}
-          </div>
-
-          {/* User Uploaded Reports Grid */}
-          {userReports.length === 0 ? (
+      ) : allReports.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 text-center">
               <div className="text-6xl mb-4">📋</div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-2">No Reports Uploaded</h3>
+          <h3 className="text-2xl font-semibold text-gray-800 mb-2">No Reports Available</h3>
               <p className="text-gray-600 mb-6">
-                Upload your medical reports, lab results, or test reports to keep them organized and easily accessible.
+            Your medical reports will appear here once they are available.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {userReports.map((report) => (
-                <div
-                  key={report.id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
-                >
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-3">
+        <div className="space-y-4">
+          {allReports.map((report) => (
+            <div
+              key={report.id || report._id}
+              className="bg-white rounded-xl shadow-md p-4 border border-gray-200"
+            >
+              <div className="flex items-center justify-between gap-4">
+                {/* Icon and Name */}
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-lg">
+                    {report.reportCategory === "Lab Test Report" ? (
+                      <FlaskConical className="w-6 h-6 text-gray-600" />
+                    ) : (
+                      <FileText className="w-6 h-6 text-gray-600" />
+                    )}
+                  </div>
+                  {/* Name and Date/Time */}
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900 truncate" title={report.name}>
+                    <p className="text-gray-900 text-sm font-semibold mb-1">
                             {report.name}
-                          </h3>
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                            Uploaded
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                    </p>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600">
                           <span className="flex items-center gap-1">
                             <span>📅</span>
-                            {report.uploadedDate}
+                        {report.uploadedDate || formatDate(report.slotDate) || "N/A"}
+                      </span>
+                      {report.reportCategory && (
+                        <span className="text-gray-600">
+                          {report.reportCategory}
                           </span>
+                      )}
                           <span className="flex items-center gap-1">
                             <span>🕐</span>
-                            {report.uploadedTime}
+                        {report.uploadedTime || report.slotTime || "N/A"}
                           </span>
-                        </div>
-                      </div>
-                      <button
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                        onClick={() => handleDelete(report._id || report.id)}
-                        title="Delete report"
-                      >
-                        <span className="text-xl">Delete</span>
-                      </button>
                     </div>
-
-                    {/* Preview */}
-                    <div className="mb-3 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                      {report.type === "image" ? (
-                        <img
-                          src={report.url}
-                          alt="Report preview"
-                          className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => setSelectedReport(report)}
-                        />
-                      ) : (
-                        <div className="w-full h-48 flex items-center justify-center bg-red-50 cursor-pointer hover:bg-red-100 transition-colors" onClick={() => setSelectedReport(report)}>
-                          <div className="text-center">
-                            <div className="text-5xl mb-2">📄</div>
-                            <p className="text-sm text-gray-600 font-medium">PDF Document</p>
-                            <p className="text-xs text-gray-500 mt-1">Click to view</p>
                           </div>
                         </div>
-                      )}
-      </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2">
+                {/* View and Download Buttons */}
+                <div className="flex items-center gap-2">
                       <button
-                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                         onClick={() => setSelectedReport(report)}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
                       >
                         View
                       </button>
+                  {report.url && (
                       <a
                         href={report.url}
                         download={report.name}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                       >
                         Download
                       </a>
+                  )}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </>
-      )}
 
-      {/* Doctor Reports Tab */}
-      {activeTab === "doctor" && (
-        <>
-          {loadingDoctorReports ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 border-4 border-gray-300 border-t-4 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600 text-lg">Loading doctor reports...</p>
+      {/* Upload Report Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={handleDecline}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Upload Your Report</h3>
+            
+            {/* Name Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Name of your Report
+              </label>
+              <input
+                type="text"
+                value={uploadForm.name}
+                onChange={(e) => setUploadForm({ ...uploadForm, name: e.target.value })}
+                placeholder="Enter report name"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
             </div>
-          ) : doctorReports.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 text-center">
-              <div className="text-6xl mb-4">👨‍⚕️</div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-2">No Doctor Reports Available</h3>
-              <p className="text-gray-600 mb-6">
-                Reports sent by doctors after your consultations will appear here.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {doctorReports.map((report) => (
-          <div
-            key={report.id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
-          >
-                  <div className="p-4">
-            <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-gray-900 truncate" title={report.name}>
-                            {report.name}
-                          </h3>
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                            From Doctor
-                          </span>
-                        </div>
-                        <p className="text-blue-600 text-sm font-medium mb-2">
-                          {report.doctorName} - {report.speciality}
-                        </p>
-                        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <span>📅</span>
-                            {report.uploadedDate}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <span>🕐</span>
-                            {report.uploadedTime}
-                          </span>
-                        </div>
-                      </div>
+
+            {/* Dropdown */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Type
+              </label>
+              <select
+                value={uploadForm.type}
+                onChange={(e) => setUploadForm({ ...uploadForm, type: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              >
+                <option value="Prescription">Prescription</option>
+                <option value="Lab Test Report">Lab Test Report</option>
+              </select>
                     </div>
 
-                    {/* Preview */}
-                    <div className="mb-3 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                      {report.url ? (
-                        report.type === "image" ? (
-                          <img
-                            src={report.url}
-                            alt="Report preview"
-                            className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => report.url && setSelectedReport(report)}
-                          />
-                        ) : (
-                          <div className="w-full h-48 flex items-center justify-center bg-red-50 cursor-pointer hover:bg-red-100 transition-colors" onClick={() => report.url && setSelectedReport(report)}>
-                            <div className="text-center">
-                              <div className="text-5xl mb-2">📄</div>
-                              <p className="text-sm text-gray-600 font-medium">PDF Document</p>
-                              <p className="text-xs text-gray-500 mt-1">Click to view</p>
-                            </div>
-                          </div>
-                        )
-                      ) : (
-                        <div className="w-full h-48 flex items-center justify-center bg-yellow-50 cursor-not-allowed">
-                          <div className="text-center">
-                            <div className="text-5xl mb-2">⏳</div>
-                            <p className="text-sm text-gray-600 font-medium">Report Pending</p>
-                            <p className="text-xs text-gray-500 mt-1">Doctor will upload soon</p>
-                          </div>
-                        </div>
+            {/* File Upload */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload File
+              </label>
+              <label className="flex items-center justify-center w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                <span className="text-sm font-medium">Upload</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*,application/pdf"
+                  onChange={handleFileChange}
+                />
+              </label>
+              {uploadForm.file && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Selected: {uploadForm.file.name}
+                </p>
                       )}
                     </div>
 
-                    {/* Actions */}
-                    {report.url ? (
-                      <div className="flex gap-2">
+            {/* Save and Decline Buttons */}
+            <div className="flex items-center justify-between gap-4">
                         <button
-                          className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                          onClick={() => setSelectedReport(report)}
+                onClick={handleDecline}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
                         >
-                          View
+                Decline
                         </button>
-                        <a
-                          href={report.url}
-                          download={report.name}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                        >
-                          Download
-                        </a>
-                      </div>
-                    ) : (
-                      <div className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium text-center">
-                        Report not available yet
-                      </div>
-                    )}
+              <button
+                onClick={handleUploadSubmit}
+                disabled={uploading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {uploading ? 'Uploading...' : 'Save'}
+              </button>
                   </div>
                 </div>
-              ))}
             </div>
-          )}
-        </>
       )}
 
       {/* Full Screen Viewer Modal */}
       {selectedReport && (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setSelectedReport(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 border-b bg-gray-50 flex-shrink-0">
               <div>
                 <h3 className="text-xl font-semibold text-gray-900">{selectedReport.name}</h3>
                 <p className="text-sm text-gray-600">
@@ -508,23 +413,23 @@ const Reports = () => {
                 ✕ Close
               </button>
             </div>
-            <div className="p-4 bg-gray-100">
+            <div className="p-4 bg-gray-100 overflow-y-auto flex-1">
               {selectedReport.url ? (
                 selectedReport.type === "image" ? (
                   <img
                     src={selectedReport.url}
-                alt="Report"
-                    className="w-full h-auto max-h-[75vh] object-contain rounded-lg mx-auto"
-              />
-            ) : (
-              <iframe
+                    alt="Report"
+                    className="w-full h-auto object-contain rounded-lg mx-auto"
+                  />
+                ) : (
+                  <iframe
                     src={selectedReport.url}
                     title="PDF Report"
-                    className="w-full h-[75vh] rounded-lg border border-gray-300"
+                    className="w-full min-h-[600px] rounded-lg border border-gray-300"
                   />
                 )
               ) : (
-                <div className="w-full h-[75vh] flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center min-h-[400px]">
                   <div className="text-center">
                     <div className="text-6xl mb-4">⏳</div>
                     <p className="text-lg font-semibold text-gray-700">Report Not Available</p>
@@ -533,21 +438,8 @@ const Reports = () => {
                 </div>
               )}
             </div>
-            {selectedReport.url && (
-              <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <a
-                  href={selectedReport.url}
-                  download={selectedReport.name}
-              target="_blank"
-              rel="noreferrer"
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center gap-2"
-            >
-                  Download
-            </a>
-              </div>
-            )}
           </div>
-      </div>
+        </div>
       )}
     </div>
   );

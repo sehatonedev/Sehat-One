@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FlaskConical, Video, Hospital, Pill } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
+import UpcomingAppointment from "./UpcomingAppointment";
 
 const Services = () => {
   const navigate = useNavigate();
@@ -44,6 +45,11 @@ const Services = () => {
             }}
           />
         ))}
+      </div>
+
+      {/* Upcoming/Active Appointments */}
+      <div className="w-full mb-6 sm:mb-8 md:mb-10">
+        <UpcomingAppointment />
       </div>
 
       {/* Heading */}
