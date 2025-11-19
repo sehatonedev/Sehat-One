@@ -20,9 +20,10 @@ const Navbar = () => {
   }
 
   return (
-    <div className='flex justify-between items-center px-4 sm:px-10 py-3 border-b bg-white'>
-      <div className='flex items-center gap-2 text-xs'>
-        <img onClick={() => navigate('/')} className='w-36 sm:w-40 cursor-pointer' src={assets.admin_logo} alt="" />
+    <div className='sticky top-0 z-50 flex justify-between items-center px-4 sm:px-10 py-3 border-b bg-white'>
+      <div className='flex items-center gap-3 text-xs'>
+        <img onClick={() => navigate('/')} className='h-10 sm:h-12 cursor-pointer' src={assets.sehat_one_logo} alt="Sehat One Logo" />
+        <h1 className='text-xl sm:text-2xl font-bold text-gray-900'>Sehat One</h1>
         <p className='border px-2.5 py-0.5 rounded-full border-gray-500 text-gray-600'>{aToken ? 'Admin' : 'Doctor'}</p>
       </div>
       <button onClick={() => logout()} className='bg-primary text-white text-sm px-10 py-2 rounded-full'>Logout</button>
